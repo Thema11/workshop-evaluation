@@ -570,6 +570,43 @@ function saveToStorage() {
     
   } catch(e) {}
 }
+function loadFromSheets(cb) {
+  if(!sheetsURL) { if(cb) cb(); return; }
+  const s = document.createElement('script');
+  window.__sheetCB = function(rows){
+    try { allResponses = mapRowsToResponses(rows); } catch(e){ console.error(e); }
+    try { document.body.removeChild(s); } catch(e){}
+    if(cb) cb();
+  };
+  s.src = sheetsURL + '?action=read&callback=__sheetCB&t=' + Date.now();
+  document.body.appendChild(s);
+}
+
+function mapRowsToResponses(rows) {
+  if(!rows || rows.length < 2) return [];
+  const allQ = getAllQuestions();
+  const out = [];
+  for(let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if(!r[0]) continue;
+    const answers = {};
+    allQ.forEach((q, idx) => {
+      const v = r[9 + idx];
+      if(v !== '' && v != null) answers[q.key] = Number(v);
+    });
+    const openAnswers = [0,1,2].map(k => ({
+      question: config.openQuestions[k] || '',
+      answer: r[20 + k] || ''
+    }));
+    out.push({
+      id: r[0], name: r[1] || '', dept: r[2] || '',
+      avgScore: Number(r[3]) || 0, submittedAt: r[4] || '',
+      answers, openAnswers, questions: allQ,
+      workshopTitle: config.workshopTitle
+    });
+  }
+  return out;
+}
 
 function loadFromStorage() {
   try {
@@ -747,8 +784,8 @@ function submitSurvey() {
   }));
 
   const now = new Date();
-  const refNum = `WS-${now.getFullYear()}-${String(allResponses.length+1).padStart(4,'0')}`;
-
+  const refNum = `WS-${now.getFullYear()}-${now.getTime().toString().slice(-6)}${Math.floor(Math.random()*90+10)}`;
+  
   const response = {
     id: refNum,
     name: document.getElementById('gi-name')?.value || '',
@@ -805,12 +842,14 @@ function showAdminTab(t) {
   document.getElementById('admin-tab-'+t).style.display = 'block';
   const activeBtn = document.getElementById('at-'+t);
   if(activeBtn) activeBtn.className = 'btn btn-primary btn-sm';
-
-  if(t==='overview') renderOverview();
-  if(t==='responses') renderResponses();
-  if(t==='analysis') renderAnalysis();
-  if(t==='manage') renderManageQuestions();
-  if(t==='settings') {}
+  const render = () => {
+    if(t==='overview') renderOverview();
+    if(t==='responses') renderResponses();
+    if(t==='analysis') renderAnalysis();
+    if(t==='manage') renderManageQuestions();
+  };
+  if(['overview','responses','analysis'].includes(t)) loadFromSheets(render);
+  else render();
 }
 
 function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
