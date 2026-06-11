@@ -457,13 +457,6 @@ tbody tr:last-child td{border-bottom:none;}
   <div id="admin-tab-settings" style="display:none;">
     <div class="admin-section-title">🔧 الإعدادات</div>
     <div class="manage-section">
-      <h3>📡 ربط Google Sheets</h3>
-      <div class="form-group" style="max-width:600px;">
-        <label>رابط Google Apps Script (Web App URL)</label>
-        <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="saveSettings()" style="margin-top:10px;">💾 حفظ</button>
-      <button class="btn btn-outline btn-sm" onclick="testConnection()" style="margin-top:10px;">🔗 اختبار الاتصال</button>
       <div id="connection-status" style="margin-top:10px;font-size:13px;"></div>
     </div>
     <div class="manage-section">
@@ -564,7 +557,7 @@ const PER_PAGE = 15;
 let isLoggedIn = false;
 let surveyActive = true;
 let adminPassword = 'ITP@2025';
-let sheetsURL = '';
+const sheetsURL = 'https://script.google.com/macros/s/AKfycby3qmfx5O9XIu_ASbryC5ylGGtBr92Q5ufNU2kFRuWtf0YWd3aCN-NvxNVzgMVf3swc/exec';
 let charts = {};
 
 // ===== STORAGE =====
@@ -574,7 +567,8 @@ function saveToStorage() {
     localStorage.setItem('ws_config', JSON.stringify(config));
     localStorage.setItem('ws_active', JSON.stringify(surveyActive));
     localStorage.setItem('ws_password', adminPassword);
-    localStorage.setItem('ws_sheets_url', sheetsURL);
+    const s = localStorage.getItem('ws_sheets_url');
+    if(s) sheetsURL = s;
   } catch(e) {}
 }
 
@@ -806,7 +800,6 @@ function refreshAdmin() {
 
 function showAdminTab(t) {
   ['overview','responses','analysis','manage','settings'].forEach(tab => {
-    document.getElementById('admin-tab-'+tab).style.display = 'none';
     const btn = document.getElementById('at-'+tab);
     if(btn) btn.className = 'btn btn-outline btn-sm';
   });
@@ -1140,22 +1133,7 @@ function updateWelcomePage() {
 }
 
 // ===== SETTINGS =====
-function saveSettings() {
-  sheetsURL = document.getElementById('sheets-url-input').value.trim();
-  saveToStorage();
-  document.getElementById('connection-status').innerHTML = '<span style="color:var(--teal-dark);">✅ تم حفظ الإعدادات.</span>';
-}
 
-function testConnection() {
-  const url = document.getElementById('sheets-url-input').value.trim();
-  if(!url){alert('أدخلي الرابط أولاً.');return;}
-  document.getElementById('connection-status').innerHTML = '⏳ جاري الاختبار...';
-  const img = new Image();
-  img.onload = img.onerror = () => {
-    document.getElementById('connection-status').innerHTML = '<span style="color:var(--teal-dark);">✅ الرابط يعمل بشكل صحيح.</span>';
-  };
-  img.src = url + '?test=1&t=' + Date.now();
-}
 
 function toggleSurvey() {
   surveyActive = document.getElementById('survey-active').checked;
