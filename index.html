@@ -790,7 +790,6 @@ function submitSurvey() {
 function refreshAdmin() {
   document.getElementById('survey-active').checked = surveyActive;
   document.getElementById('survey-status-text').textContent = surveyActive ? 'التقييم مفعل' : 'التقييم متوقف';
-  document.getElementById('sheets-url-input').value = sheetsURL;
   document.getElementById('ws-title-input').value = config.workshopTitle;
   document.getElementById('ws-desc-input').value = config.workshopDesc;
   showAdminTab('overview');
