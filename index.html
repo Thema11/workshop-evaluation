@@ -581,8 +581,7 @@ function loadFromStorage() {
     if(a !== null) surveyActive = JSON.parse(a);
     const p = localStorage.getItem('ws_password');
     if(p) adminPassword = p;
-    const s = localStorage.getItem('ws_sheets_url');
-    if(s) sheetsURL = s;
+    
   } catch(e) {}
 }
 
