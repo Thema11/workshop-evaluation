@@ -29,7 +29,7 @@ body{font-family:'Tajawal','Segoe UI',sans-serif;background:var(--cream-light);c
 .pp-header-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 28px;max-width:1400px;margin:0 auto;gap:16px;}
 .pp-logo-area{display:flex;align-items:center;justify-content:center;}
 .pp-emblem{height:80px;width:auto;display:flex;align-items:center;justify-content:center;}
-.pp-emblem img{height:180px;width:auto;object-fit:contain;}
+.pp-emblem img{height:80px;width:auto;object-fit:contain;}
 .pp-gold-bar{height:4px;background:var(--gold-dark);}
 .nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.1);border-radius:6px;padding:4px;direction:rtl;}
 .nav-tab{padding:7px 16px;border-radius:4px;border:none;background:transparent;color:rgba(255,255,255,0.8);cursor:pointer;font-family:inherit;font-size:13px;transition:all 0.2s;}
@@ -342,7 +342,7 @@ tbody tr:last-child td{border-bottom:none;}
       <button class="btn btn-outline btn-sm" onclick="showAdminTab('responses')" id="at-responses">الردود</button>
       <button class="btn btn-outline btn-sm" onclick="showAdminTab('analysis')" id="at-analysis">التحليل</button>
       <button class="btn btn-outline btn-sm" onclick="showAdminTab('manage')" id="at-manage">إدارة الأسئلة</button>
-      <button class="btn btn-outline btn-sm" onclick="showAdminTab('settings')" id="at-settings">الإعدادات</button>
+      <button class="btn btn-outline btn-sm" onclick="refreshData()" id="at-refresh">🔄 تحديث البيانات</button><button class="btn btn-outline btn-sm" onclick="showAdminTab('settings')" id="at-settings">الإعدادات</button>
     </div>
     <button class="btn btn-outline btn-sm" onclick="adminLogout()">تسجيل الخروج</button>
   </div>
@@ -457,7 +457,8 @@ tbody tr:last-child td{border-bottom:none;}
   <div id="admin-tab-settings" style="display:none;">
     <div class="admin-section-title">🔧 الإعدادات</div>
     <div class="manage-section">
-      <div id="connection-status" style="margin-top:10px;font-size:13px;"></div>
+      <h3>📡 Google Sheets</h3>
+      <div class="alert alert-info">✅ النظام مرتبط بـ Google Sheets بشكل ثابت. جميع البيانات تُحفظ وتُقرأ منه تلقائياً.</div>
     </div>
     <div class="manage-section">
       <h3>🔐 تغيير كلمة المرور</h3>
@@ -495,131 +496,143 @@ tbody tr:last-child td{border-bottom:none;}
 </footer>
 
 <script>
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwj-6HZP9ggqHgXY_QaevUlwW0fyZtZhifQ8FApyNsIhHv-hkpr3PvIRlc1zWWB8iYd/exec';
+
 // ===== DEFAULT CONFIG =====
 const DEFAULT_CONFIG = {
   workshopTitle: 'تقييم الورشة',
   workshopDesc: 'شاركنا رأيك لمساعدتنا على تحسين جودة ورشنا المستقبلية.',
   axes: [
-    {
-      id: 'content',
-      title: 'تقييم المحتوى',
-      desc: 'يقيس هذا المحور مدى وضوح أهداف الورشة وجودة المحتوى المقدم.',
-      questions: [
-        'كانت أهداف الورشة واضحة.',
-        'المحتوى كان مفيداً ومرتبطًا بموضوع الورشة.',
-        'تم عرض المحتوى بشكل منظم.'
-      ]
-    },
-    {
-      id: 'trainer',
-      title: 'تقييم المدرب والميسِر',
-      desc: 'يقيس هذا المحور مستوى أداء المدرب في إيصال المعلومات وإدارة النقاش.',
-      questions: [
-        'تمكن المدرب من إيصال المعلومات بوضوح.',
-        'أدار النقاش بشكل فعال.',
-        'أجاب على الاستفسارات بشكل مناسب.'
-      ]
-    },
-    {
-      id: 'organization',
-      title: 'التنظيم والتجربة',
-      desc: 'يقيس هذا المحور مستوى التنظيم والبيئة والوقت المخصص.',
-      questions: [
-        'تنظيم الورشة كان جيدًا.',
-        'الوقت كان مناسبًا.',
-        'البيئة والتجهيزات كانت مناسبة.'
-      ]
-    },
-    {
-      id: 'satisfaction',
-      title: 'الرضا العام',
-      desc: 'يقيس هذا المحور مستوى الرضا العام والتوصية.',
-      questions: [
-        'أنا راض عن الورشة بشكل عام.',
-        'أوصي بحضور ورش مشابهة مستقبلًا.'
-      ]
-    }
+    { id:'content', title:'تقييم المحتوى', desc:'يقيس هذا المحور مدى وضوح أهداف الورشة وجودة المحتوى المقدم.', questions:['كانت أهداف الورشة واضحة.','المحتوى كان مفيداً ومرتبطاً بموضوع الورشة.','تم عرض المحتوى بشكل منظم.'] },
+    { id:'trainer', title:'تقييم المدرب والميسر', desc:'يقيس هذا المحور مستوى أداء المدرب في إيصال المعلومات وإدارة النقاش.', questions:['تمكن المدرب من إيصال المعلومات بوضوح.','أدار النقاش بشكل فعال.','أجاب على الاستفسارات بشكل مناسب.'] },
+    { id:'organization', title:'التنظيم والتجربة', desc:'يقيس هذا المحور مستوى التنظيم والبيئة والوقت المخصص.', questions:['تنظيم الورشة كان جيداً.','الوقت كان مناسباً.','البيئة والتجهيزات كانت مناسبة.'] },
+    { id:'satisfaction', title:'الرضا العام', desc:'يقيس هذا المحور مستوى الرضا العام والتوصية.', questions:['أنا راض عن الورشة بشكل عام.','أوصي بحضور ورش مشابهة مستقبلاً.'] }
   ],
-  openQuestions: [
-    'أكثر شيء أعجبك في الورشة؟',
-    'ما أبرز فرصة للتحسين؟',
-    'أي ملاحظات إضافية؟'
-  ]
+  openQuestions: ['أكثر شيء أعجبك في الورشة؟','ما أبرز فرصة للتحسين؟','أي ملاحظات إضافية؟']
 };
 
 // ===== STATE =====
 let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 let answers = {};
-let allResponses = [];
+let allResponses = []; // يُحمَّل من Sheets
 let filteredResponses = [];
 let currentPage = 1;
 const PER_PAGE = 15;
 let isLoggedIn = false;
 let surveyActive = true;
 let adminPassword = 'ITP@2025';
-const sheetsURL = 'https://script.google.com/macros/s/AKfycby3qmfx5O9XIu_ASbryC5ylGGtBr92Q5ufNU2kFRuWtf0YWd3aCN-NvxNVzgMVf3swc/exec';
 let charts = {};
+let isLoading = false;
 
-// ===== STORAGE =====
-function saveToStorage() {
+// ===== CONFIG STORAGE (محلي فقط للإعدادات) =====
+function saveConfig() {
   try {
-    localStorage.setItem('ws_responses', JSON.stringify(allResponses));
     localStorage.setItem('ws_config', JSON.stringify(config));
     localStorage.setItem('ws_active', JSON.stringify(surveyActive));
     localStorage.setItem('ws_password', adminPassword);
-    
   } catch(e) {}
 }
-function loadFromSheets(cb) {
-  if(!sheetsURL) { if(cb) cb(); return; }
-  const s = document.createElement('script');
-  window.__sheetCB = function(rows){
-    try { allResponses = mapRowsToResponses(rows); } catch(e){ console.error(e); }
-    try { document.body.removeChild(s); } catch(e){}
-    if(cb) cb();
-  };
-  s.src = sheetsURL + '?action=read&callback=__sheetCB&t=' + Date.now();
-  document.body.appendChild(s);
-}
 
-function mapRowsToResponses(rows) {
-  if(!rows || rows.length < 2) return [];
-  const allQ = getAllQuestions();
-  const out = [];
-  for(let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    if(!r[0]) continue;
-    const answers = {};
-    allQ.forEach((q, idx) => {
-      const v = r[9 + idx];
-      if(v !== '' && v != null) answers[q.key] = Number(v);
-    });
-    const openAnswers = [0,1,2].map(k => ({
-      question: config.openQuestions[k] || '',
-      answer: r[20 + k] || ''
-    }));
-    out.push({
-      id: r[0], name: r[1] || '', dept: r[2] || '',
-      avgScore: Number(r[3]) || 0, submittedAt: r[4] || '',
-      answers, openAnswers, questions: allQ,
-      workshopTitle: config.workshopTitle
-    });
-  }
-  return out;
-}
-
-function loadFromStorage() {
+function loadConfig() {
   try {
-    const r = localStorage.getItem('ws_responses');
-    if(r) allResponses = JSON.parse(r);
     const c = localStorage.getItem('ws_config');
     if(c) config = JSON.parse(c);
     const a = localStorage.getItem('ws_active');
     if(a !== null) surveyActive = JSON.parse(a);
     const p = localStorage.getItem('ws_password');
     if(p) adminPassword = p;
-    
   } catch(e) {}
+}
+
+// ===== GOOGLE SHEETS API =====
+function sheetsRequest(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const url = SHEETS_URL + '?' + new URLSearchParams({...params, callback: cbName}).toString();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      document.body.removeChild(script);
+      reject(new Error('Timeout'));
+    }, 10000);
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      document.body.removeChild(script);
+      resolve(data);
+    };
+    script.src = url;
+    script.onerror = () => { clearTimeout(timeout); reject(new Error('Script error')); };
+    document.body.appendChild(script);
+  });
+}
+
+function sendToSheets(params) {
+  const img = new Image();
+  img.src = SHEETS_URL + '?' + new URLSearchParams(params).toString();
+}
+
+// قراءة جميع الردود من Sheets
+async function loadResponsesFromSheets() {
+  try {
+    showLoadingOverlay(true);
+    const raw = await sheetsRequest({ action: 'read' });
+    if(!raw || raw.length <= 1) { allResponses = []; return; }
+    const headers = raw[0];
+    allResponses = raw.slice(1).map(row => {
+      const scores = {};
+      // الأعمدة: 0=id,1=name,2=dept,3=avg,4=date,5=ax0,6=ax1,7=ax2,8=ax3,9..19=s1-s11,20-22=open
+      let qIdx = 0;
+      config.axes.forEach((ax, ai) => {
+        ax.questions.forEach((_, qi) => {
+          scores[`${ai}_${qi}`] = Number(row[9 + qIdx]) || null;
+          qIdx++;
+        });
+      });
+      const openAnswers = config.openQuestions.map((q, i) => ({
+        question: q,
+        answer: row[20 + i] || ''
+      }));
+      const axIds = ['content','trainer','organization','satisfaction'];
+      const axesScores = {};
+      axIds.forEach((id, i) => { axesScores[id] = Number(row[5+i]) || 0; });
+      return {
+        id: row[0], name: row[1], dept: row[2],
+        avgScore: Number(row[3]) || 0,
+        submittedAt: row[4],
+        axesScores, answers: scores, openAnswers,
+        questions: getAllQuestions()
+      };
+    }).filter(r => r.id);
+  } catch(err) {
+    console.error('Load error:', err);
+    allResponses = [];
+    showToast('تعذر تحميل البيانات من Google Sheets', 'error');
+  } finally {
+    showLoadingOverlay(false);
+  }
+}
+
+// ===== UI HELPERS =====
+function showLoadingOverlay(show) {
+  let el = document.getElementById('loading-overlay');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(2,128,122,0.15);z-index:999;display:flex;align-items:center;justify-content:center;';
+    el.innerHTML = '<div style="background:white;padding:24px 32px;border-radius:12px;text-align:center;font-family:Tajawal,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.15);"><div style="font-size:28px;margin-bottom:10px;">⏳</div><div style="color:#02807A;font-weight:600;">جاري التحميل...</div></div>';
+    document.body.appendChild(el);
+  }
+  el.style.display = show ? 'flex' : 'none';
+}
+
+function showToast(msg, type='info') {
+  const el = document.createElement('div');
+  const bg = type==='error'?'#dc3545':type==='success'?'#02807A':'#309C99';
+  el.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${bg};color:white;padding:12px 24px;border-radius:8px;font-family:Tajawal,sans-serif;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
 }
 
 // ===== NAVIGATION =====
@@ -628,7 +641,7 @@ function showPage(id) {
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   if(['welcome','survey','success'].includes(id)) document.getElementById('tab-survey').classList.add('active');
-  if(id === 'admin') document.getElementById('tab-admin').classList.add('active');
+  if(id==='admin') document.getElementById('tab-admin').classList.add('active');
   window.scrollTo(0,0);
 }
 
@@ -640,7 +653,7 @@ function showAdminLogin() {
 function doLogin() {
   const u = document.getElementById('login-user').value;
   const p = document.getElementById('login-pass').value;
-  if(u === 'admin' && p === adminPassword) {
+  if(u==='admin' && p===adminPassword) {
     isLoggedIn = true;
     document.getElementById('login-err').style.display = 'none';
     showPage('admin');
@@ -651,21 +664,21 @@ function doLogin() {
   }
 }
 
-function adminLogout() { isLoggedIn = false; showPage('welcome'); }
+function adminLogout() { isLoggedIn=false; showPage('welcome'); }
 
-// ===== BUILD SURVEY =====
+// ===== SURVEY =====
 function getAllQuestions() {
   let all = [];
   config.axes.forEach((ax, ai) => {
     ax.questions.forEach((q, qi) => {
-      all.push({ axis: ax.title, axisId: ax.id, text: q, key: `${ai}_${qi}` });
+      all.push({ axis:ax.title, axisId:ax.id, text:q, key:`${ai}_${qi}` });
     });
   });
   return all;
 }
 
 function startSurvey() {
-  if(!surveyActive) { alert('التقييم متوقف حاليًا.'); return; }
+  if(!surveyActive) { alert('التقييم متوقف حالياً.'); return; }
   answers = {};
   buildForm();
   showPage('survey');
@@ -674,28 +687,18 @@ function startSurvey() {
 
 function buildForm() {
   let html = '';
-
-  // General info
   html += `<div class="section-header"><div class="sh-content"><div class="sh-title">📝 بيانات اختيارية</div></div></div>
-  <div class="section-body">
-    <div class="general-info-grid">
-      <div class="form-group"><label>الاسم (اختياري)</label><input type="text" id="gi-name" placeholder="اسمك"></div>
-      <div class="form-group"><label>الجهة / الإدارة (اختياري)</label><input type="text" id="gi-dept" placeholder="جهتك أو إدارتك"></div>
-    </div>
-  </div>`;
+  <div class="section-body"><div class="general-info-grid">
+    <div class="form-group"><label>الاسم (اختياري)</label><input type="text" id="gi-name" placeholder="اسمك"></div>
+    <div class="form-group"><label>الجهة / الإدارة (اختياري)</label><input type="text" id="gi-dept" placeholder="جهتك أو إدارتك"></div>
+  </div></div>`;
 
-  // Axes
   config.axes.forEach((ax, ai) => {
-    const total = ax.questions.length;
     html += `<div class="section-header">
-      <div class="sh-content">
-        <div class="sh-title">📌 ${ax.title}</div>
-        ${ax.desc ? `<div class="sh-desc">${ax.desc}</div>` : ''}
-      </div>
-      <span class="section-badge">${total} سؤال</span>
-    </div>`;
-
-    html += `<div class="likert-header">
+      <div class="sh-content"><div class="sh-title">📌 ${ax.title}</div>${ax.desc?`<div class="sh-desc">${ax.desc}</div>`:''}</div>
+      <span class="section-badge">${ax.questions.length} سؤال</span>
+    </div>
+    <div class="likert-header">
       <div class="lh-empty"></div>
       <div class="lh-label"><span>1</span>لا أوافق بشدة</div>
       <div class="lh-label"><span>2</span>لا أوافق</div>
@@ -704,57 +707,45 @@ function buildForm() {
       <div class="lh-label"><span>5</span>أوافق بشدة</div>
     </div>
     <div class="section-body">`;
-
     ax.questions.forEach((q, qi) => {
       const key = `${ai}_${qi}`;
       const labels = ['لا أوافق بشدة','لا أوافق','محايد','أوافق','أوافق بشدة'];
-      const qNum = config.axes.slice(0,ai).reduce((s,a) => s+a.questions.length, 0) + qi + 1;
+      const qNum = config.axes.slice(0,ai).reduce((s,a)=>s+a.questions.length,0)+qi+1;
       html += `<div class="question-row" id="qrow-${key}">
         <div class="q-text"><span class="q-num">${qNum}</span>${q}</div>
-        ${[1,2,3,4,5].map(v => `
-        <div class="likert-cell" onclick="setAnswer('${key}',${v})" title="${labels[v-1]}">
-          <div class="likert-radio"></div>
-          <span class="mobile-label">${labels[v-1]}</span>
-        </div>`).join('')}
+        ${[1,2,3,4,5].map(v=>`<div class="likert-cell" onclick="setAnswer('${key}',${v})" title="${labels[v-1]}"><div class="likert-radio"></div><span class="mobile-label">${labels[v-1]}</span></div>`).join('')}
       </div>`;
     });
     html += `</div>`;
   });
 
-  // Open questions
-  html += `<div class="section-header"><div class="sh-content"><div class="sh-title">💬 أسئلة مفتوحة (اختيارية)</div></div></div>
-  <div class="section-body">`;
-  config.openQuestions.forEach((q, i) => {
-    html += `<div class="open-question">
-      <div class="open-q-label"><span class="q-num">${i+1}</span>${q}</div>
-      <textarea class="open-input" id="open-${i}" placeholder="أجب هنا..." rows="2"></textarea>
-    </div>`;
+  html += `<div class="section-header"><div class="sh-content"><div class="sh-title">💬 أسئلة مفتوحة (اختيارية)</div></div></div><div class="section-body">`;
+  config.openQuestions.forEach((q,i) => {
+    html += `<div class="open-question"><div class="open-q-label"><span class="q-num">${i+1}</span>${q}</div>
+    <textarea class="open-input" id="open-${i}" placeholder="أجب هنا..." rows="2"></textarea></div>`;
   });
   html += `</div>`;
-
   document.getElementById('survey-form-container').innerHTML = html;
 }
 
 function setAnswer(key, val) {
   answers[key] = val;
-  const row = document.getElementById('qrow-' + key);
+  const row = document.getElementById('qrow-'+key);
   if(row) {
     row.className = row.className.replace(/sel-[0-9]/g,'').trim();
-    row.classList.add('answered','sel-' + val);
+    row.classList.add('answered','sel-'+val);
   }
   updateProgress();
 }
 
-function getTotalQ() {
-  return config.axes.reduce((s,ax) => s + ax.questions.length, 0);
-}
+function getTotalQ() { return config.axes.reduce((s,ax)=>s+ax.questions.length,0); }
 
 function updateProgress() {
   const total = getTotalQ();
   const answered = Object.keys(answers).length;
-  const pct = total > 0 ? Math.round(answered/total*100) : 0;
-  document.getElementById('prog-pct').textContent = pct + '%';
-  document.getElementById('prog-fill').style.width = pct + '%';
+  const pct = total>0?Math.round(answered/total*100):0;
+  document.getElementById('prog-pct').textContent = pct+'%';
+  document.getElementById('prog-fill').style.width = pct+'%';
   document.getElementById('prog-text').textContent = `${answered} / ${total} إجابة`;
 }
 
@@ -763,104 +754,76 @@ function submitSurvey() {
   const total = getTotalQ();
   const answered = Object.keys(answers).length;
   if(answered < total) {
-    if(!confirm(`لم تُجب على ${total - answered} سؤالًا. هل تريد الإرسال الآن؟`)) return;
+    if(!confirm(`لم تُجب على ${total-answered} سؤالاً. هل تريد الإرسال الآن؟`)) return;
   }
-
   const allQ = getAllQuestions();
-  const scores = allQ.map(q => answers[q.key] || null);
-  const validScores = scores.filter(s => s !== null);
-  const avg = validScores.length ? validScores.reduce((a,b)=>a+b,0)/validScores.length : 0;
+  const scores = allQ.map(q=>answers[q.key]||null);
+  const validScores = scores.filter(s=>s!==null);
+  const avg = validScores.length?validScores.reduce((a,b)=>a+b,0)/validScores.length:0;
 
-  // متوسط كل محور
   const axesScores = {};
-  config.axes.forEach((ax, ai) => {
-    const axScores = ax.questions.map((_,qi) => answers[`${ai}_${qi}`]).filter(Boolean);
-    axesScores[ax.id] = axScores.length ? axScores.reduce((a,b)=>a+b,0)/axScores.length : 0;
+  config.axes.forEach((ax,ai) => {
+    const axScores = ax.questions.map((_,qi)=>answers[`${ai}_${qi}`]).filter(Boolean);
+    axesScores[ax.id] = axScores.length?axScores.reduce((a,b)=>a+b,0)/axScores.length:0;
   });
 
-  const openAnswers = config.openQuestions.map((q,i) => ({
-    question: q,
-    answer: document.getElementById('open-'+i)?.value || ''
-  }));
-
+  const openAnswers = config.openQuestions.map((q,i)=>({question:q,answer:document.getElementById('open-'+i)?.value||''}));
   const now = new Date();
-  const refNum = `WS-${now.getFullYear()}-${now.getTime().toString().slice(-6)}${Math.floor(Math.random()*90+10)}`;
-  
-  const response = {
+  const refNum = `WS-${now.getFullYear()}-${String(Date.now()).slice(-4)}`;
+
+  const sheetsData = {
     id: refNum,
-    name: document.getElementById('gi-name')?.value || '',
-    dept: document.getElementById('gi-dept')?.value || '',
-    answers,
-    openAnswers,
+    name: document.getElementById('gi-name')?.value||'',
+    dept: document.getElementById('gi-dept')?.value||'',
     avgScore: Math.round(avg*100)/100,
-    axesScores,
-    questions: allQ,
-    workshopTitle: config.workshopTitle,
-    submittedAt: now.toISOString()
+    submittedAt: now.toLocaleString('ar-SA'),
+    scores: allQ.map(q=>answers[q.key]||''),
+    openAnswers: openAnswers.map(o=>o.answer),
+    axesScores
   };
 
-  allResponses.push(response);
-  saveToStorage();
-
-  // إرسال لـ Google Sheets
-  if(sheetsURL) {
-    const sheetsData = {
-      id: refNum,
-      name: response.name,
-      dept: response.dept,
-      avgScore: response.avgScore,
-      submittedAt: now.toLocaleString('ar-SA'),
-      scores: allQ.map(q => response.answers[q.key] || ''),
-      openAnswers: openAnswers.map(o => o.answer),
-      axesScores
-    };
-    const params = new URLSearchParams({ data: JSON.stringify(sheetsData) });
-    const img = new Image();
-    img.src = sheetsURL + '?' + params.toString();
-  }
-
+  sendToSheets({ data: JSON.stringify(sheetsData) });
   document.getElementById('ref-num').textContent = refNum;
   showPage('success');
 }
 
 // ===== ADMIN =====
-function refreshAdmin() {
+async function refreshAdmin() {
   document.getElementById('survey-active').checked = surveyActive;
-  document.getElementById('survey-status-text').textContent = surveyActive ? 'التقييم مفعل' : 'التقييم متوقف';
+  document.getElementById('survey-status-text').textContent = surveyActive?'التقييم مفعّل':'التقييم متوقف';
   document.getElementById('ws-title-input').value = config.workshopTitle;
   document.getElementById('ws-desc-input').value = config.workshopDesc;
+  await loadResponsesFromSheets();
   showAdminTab('overview');
 }
 
 function showAdminTab(t) {
   ['overview','responses','analysis','manage','settings'].forEach(tab => {
-  document.getElementById('admin-tab-'+tab).style.display = 'none'; // ← هذا المحذوف
-  const btn = document.getElementById('at-'+tab);
-  if(btn) btn.className = 'btn btn-outline btn-sm';
-});
-
-  document.getElementById('admin-tab-'+t).style.display = 'block';
-  const activeBtn = document.getElementById('at-'+t);
-  if(activeBtn) activeBtn.className = 'btn btn-primary btn-sm';
-  const render = () => {
-    if(t==='overview') renderOverview();
-    if(t==='responses') renderResponses();
-    if(t==='analysis') renderAnalysis();
-    if(t==='manage') renderManageQuestions();
-  };
-  if(['overview','responses','analysis'].includes(t)) loadFromSheets(render);
-  else render();
+    document.getElementById('admin-tab-'+tab).style.display='none';
+    const btn=document.getElementById('at-'+tab);
+    if(btn) btn.className='btn btn-outline btn-sm';
+  });
+  document.getElementById('admin-tab-'+t).style.display='block';
+  const activeBtn=document.getElementById('at-'+t);
+  if(activeBtn) activeBtn.className='btn btn-primary btn-sm';
+  if(t==='overview') renderOverview();
+  if(t==='responses') renderResponses();
+  if(t==='analysis') renderAnalysis();
+  if(t==='manage') renderManageQuestions();
 }
 
-function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
 
 // ===== OVERVIEW =====
 function renderOverview() {
   const total = allResponses.length;
-  const avg = total ? (allResponses.reduce((s,r)=>s+r.avgScore,0)/total).toFixed(2) : '—';
+  const avg = total?(allResponses.reduce((s,r)=>s+r.avgScore,0)/total).toFixed(2):'—';
   const highCount = allResponses.filter(r=>r.avgScore>=4).length;
-  const recPct = total ? Math.round(highCount/total*100) : 0;
-  const today = allResponses.filter(r=>new Date(r.submittedAt).toDateString()===new Date().toDateString()).length;
+  const recPct = total?Math.round(highCount/total*100):0;
+  const today = allResponses.filter(r=>{
+    const d = new Date(r.submittedAt);
+    return !isNaN(d) && d.toDateString()===new Date().toDateString();
+  }).length;
 
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-label">إجمالي المشاركين</div><div class="kpi-value">${total}</div></div>
@@ -869,335 +832,260 @@ function renderOverview() {
     <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">ردود اليوم</div><div class="kpi-value">${today}</div></div>
   `;
 
-  // Axes bar chart
   destroyChart('chart-axes');
-  const axLabels = config.axes.map(ax => ax.title);
-  const axAvgs = config.axes.map((ax, ai) => {
+  const axLabels = config.axes.map(ax=>ax.title);
+  const axAvgs = config.axes.map((ax,ai)=>{
     if(!total) return 0;
-    let scores = [];
-    allResponses.forEach(r => {
-      ax.questions.forEach((_,qi) => { if(r.answers[`${ai}_${qi}`]) scores.push(r.answers[`${ai}_${qi}`]); });
-    });
-    return scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2) : 0;
+    let scores=[];
+    allResponses.forEach(r=>ax.questions.forEach((_,qi)=>{const v=r.answers[`${ai}_${qi}`];if(v)scores.push(v);}));
+    return scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2):0;
   });
-  charts['chart-axes'] = new Chart(document.getElementById('chart-axes').getContext('2d'), {
+  charts['chart-axes']=new Chart(document.getElementById('chart-axes').getContext('2d'),{
     type:'bar',
     data:{labels:axLabels,datasets:[{label:'المتوسط',data:axAvgs,backgroundColor:['#02807A','#309C99','#AA926D','#9FD297'],borderRadius:4}]},
     options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:5}}}
   });
 
-  // Distribution doughnut
   destroyChart('chart-dist');
-  const dist = [0,0,0,0,0];
-  allResponses.forEach(r => Object.values(r.answers).forEach(v=>{if(v>=1&&v<=5)dist[v-1]++;}));
-  charts['chart-dist'] = new Chart(document.getElementById('chart-dist').getContext('2d'), {
+  const dist=[0,0,0,0,0];
+  allResponses.forEach(r=>Object.values(r.answers).forEach(v=>{if(v>=1&&v<=5)dist[v-1]++;}));
+  charts['chart-dist']=new Chart(document.getElementById('chart-dist').getContext('2d'),{
     type:'doughnut',
     data:{labels:['1','2','3','4','5'],datasets:[{data:dist,backgroundColor:['#dc3545','#fd7e14','#e6ac00','#309C99','#02807A'],borderWidth:0}]},
     options:{plugins:{legend:{position:'bottom'}},cutout:'55%'}
   });
 
-  // Satisfaction horizontal bar
   destroyChart('chart-satisfaction');
-  const satLabels = ['مرتفع جداً (5)','مرتفع (4)','محايد (3)','منخفض (2)','منخفض جداً (1)'];
-  const satData = [dist[4],dist[3],dist[2],dist[1],dist[0]];
-  charts['chart-satisfaction'] = new Chart(document.getElementById('chart-satisfaction').getContext('2d'), {
+  const satLabels=['مرتفع جداً (5)','مرتفع (4)','محايد (3)','منخفض (2)','منخفض جداً (1)'];
+  charts['chart-satisfaction']=new Chart(document.getElementById('chart-satisfaction').getContext('2d'),{
     type:'bar',
-    data:{labels:satLabels,datasets:[{data:satData,backgroundColor:['#02807A','#309C99','#e6ac00','#fd7e14','#dc3545'],borderRadius:4}]},
+    data:{labels:satLabels,datasets:[{data:[dist[4],dist[3],dist[2],dist[1],dist[0]],backgroundColor:['#02807A','#309C99','#e6ac00','#fd7e14','#dc3545'],borderRadius:4}]},
     options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}}
   });
 
-  // Strengths & improvements
-  const allQ = getAllQuestions();
-  const qAvgs = allQ.map(q => {
-    const vals = allResponses.map(r=>r.answers[q.key]).filter(Boolean);
-    return { text: q.text, avg: vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0 };
+  const allQ=getAllQuestions();
+  const qAvgs=allQ.map(q=>{
+    const vals=allResponses.map(r=>r.answers[q.key]).filter(Boolean);
+    return {text:q.text,avg:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
   }).filter(q=>q.avg>0).sort((a,b)=>b.avg-a.avg);
 
-  const top3 = qAvgs.slice(0,3);
-  const bot3 = [...qAvgs].sort((a,b)=>a.avg-b.avg).slice(0,3);
+  const top3=qAvgs.slice(0,3);
+  const bot3=[...qAvgs].sort((a,b)=>a.avg-b.avg).slice(0,3);
 
-  document.getElementById('top-strengths').innerHTML = top3.map(q=>`
-    <div class="insight-item">
-      <span class="insight-score score-high">${q.avg.toFixed(1)}</span>
-      <span style="font-size:13px;">${q.text}</span>
-    </div>`).join('') || '<p style="color:var(--text-secondary);font-size:13px;">لا توجد بيانات</p>';
-
-  document.getElementById('top-improvements').innerHTML = bot3.map(q=>`
-    <div class="insight-item">
-      <span class="insight-score score-low">${q.avg.toFixed(1)}</span>
-      <span style="font-size:13px;">${q.text}</span>
-    </div>`).join('') || '<p style="color:var(--text-secondary);font-size:13px;">لا توجد بيانات</p>';
+  document.getElementById('top-strengths').innerHTML=top3.map(q=>`
+    <div class="insight-item"><span class="insight-score score-high">${q.avg.toFixed(1)}</span><span style="font-size:13px;">${q.text}</span></div>`).join('')||'<p style="color:var(--text-secondary);font-size:13px;">لا توجد بيانات</p>';
+  document.getElementById('top-improvements').innerHTML=bot3.map(q=>`
+    <div class="insight-item"><span class="insight-score score-low">${q.avg.toFixed(1)}</span><span style="font-size:13px;">${q.text}</span></div>`).join('')||'<p style="color:var(--text-secondary);font-size:13px;">لا توجد بيانات</p>';
 }
 
 // ===== RESPONSES =====
-function renderResponses() {
-  filteredResponses = [...allResponses];
-  filterResponses();
-}
+function renderResponses() { filteredResponses=[...allResponses]; filterResponses(); }
 
 function filterResponses() {
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const fScore = document.getElementById('filter-score').value;
-  filteredResponses = allResponses.filter(r => {
-    if(search && !r.id.toLowerCase().includes(search) && !(r.name||'').toLowerCase().includes(search) && !(r.dept||'').toLowerCase().includes(search)) return false;
+  const search=document.getElementById('search-input').value.toLowerCase();
+  const fScore=document.getElementById('filter-score').value;
+  filteredResponses=allResponses.filter(r=>{
+    if(search&&!r.id.toLowerCase().includes(search)&&!(r.name||'').toLowerCase().includes(search)&&!(r.dept||'').toLowerCase().includes(search)) return false;
     if(fScore==='high'&&r.avgScore<4) return false;
     if(fScore==='mid'&&(r.avgScore<3||r.avgScore>=4)) return false;
     if(fScore==='low'&&r.avgScore>=3) return false;
     return true;
   });
-  currentPage = 1;
-  renderTable();
+  currentPage=1; renderTable();
 }
 
-function clearFilters() {
-  document.getElementById('search-input').value='';
-  document.getElementById('filter-score').value='';
-  filterResponses();
-}
+function clearFilters(){document.getElementById('search-input').value='';document.getElementById('filter-score').value='';filterResponses();}
 
 function renderTable() {
-  const start = (currentPage-1)*PER_PAGE;
-  const page = filteredResponses.slice(start, start+PER_PAGE);
-  const tbody = document.getElementById('responses-tbody');
-  if(!filteredResponses.length) {
+  const start=(currentPage-1)*PER_PAGE;
+  const page=filteredResponses.slice(start,start+PER_PAGE);
+  const tbody=document.getElementById('responses-tbody');
+  if(!filteredResponses.length){
     tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:32px;">لا توجد ردود</td></tr>`;
-    document.getElementById('pagination').innerHTML='';
-    return;
+    document.getElementById('pagination').innerHTML=''; return;
   }
-  tbody.innerHTML = page.map(r => {
-    const sc = r.avgScore;
-    const cls = sc>=4?'score-high':sc>=3?'score-mid':'score-low';
-    const date = new Date(r.submittedAt).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});
+  tbody.innerHTML=page.map(r=>{
+    const sc=r.avgScore;
+    const cls=sc>=4?'score-high':sc>=3?'score-mid':'score-low';
+    const date=r.submittedAt||'—';
     return `<tr>
       <td style="font-weight:600;direction:ltr;">${r.id}</td>
-      <td>${r.name||'—'}</td>
-      <td>${r.dept||'—'}</td>
-      <td><span class="score-pill ${cls}">${sc.toFixed(2)} / 5</span></td>
+      <td>${r.name||'—'}</td><td>${r.dept||'—'}</td>
+      <td><span class="score-pill ${cls}">${Number(sc).toFixed(2)} / 5</span></td>
       <td>${date}</td>
       <td style="display:flex;gap:6px;">
         <button class="btn btn-outline btn-sm" onclick="showDetail('${r.id}')">عرض</button>
         <button class="btn btn-danger btn-sm" onclick="deleteResponse('${r.id}')">🗑️</button>
-      </td>
-    </tr>`;
+      </td></tr>`;
   }).join('');
-
-  const totalPages = Math.ceil(filteredResponses.length/PER_PAGE);
-  document.getElementById('pagination').innerHTML = totalPages>1
-    ? Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===currentPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`).join('')
-    : '';
+  const totalPages=Math.ceil(filteredResponses.length/PER_PAGE);
+  document.getElementById('pagination').innerHTML=totalPages>1
+    ?Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===currentPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`).join(''):'';
 }
 
 function goPage(p){currentPage=p;renderTable();}
 
-function deleteResponse(id) {
+async function deleteResponse(id) {
   if(!confirm(`هل أنت متأكد من حذف التقييم ${id}؟`)) return;
-  allResponses = allResponses.filter(r=>r.id!==id);
-  saveToStorage();
-  filterResponses();
-  // حذف من Sheets
-  if(sheetsURL) { const img=new Image(); img.src=sheetsURL+'?action=delete&id='+encodeURIComponent(id); }
+  sendToSheets({action:'delete', id});
+  showToast('جاري الحذف...','info');
+  setTimeout(async()=>{
+    await loadResponsesFromSheets();
+    filterResponses();
+    showToast('تم الحذف بنجاح','success');
+  },2000);
 }
 
 function showDetail(id) {
-  const r = allResponses.find(x=>x.id===id);
+  const r=allResponses.find(x=>x.id===id);
   if(!r) return;
-  document.getElementById('modal-title').textContent = `تقييم – ${id}`;
-  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:13px;">
-    <div><strong>الاسم:</strong> ${r.name||'—'}</div>
-    <div><strong>الجهة:</strong> ${r.dept||'—'}</div>
-    <div><strong>المتوسط:</strong> <span style="color:var(--teal-dark);font-weight:700;">${r.avgScore.toFixed(2)} / 5</span></div>
-    <div><strong>التاريخ:</strong> ${new Date(r.submittedAt).toLocaleString('ar-SA')}</div>
-  </div>`;
-  config.axes.forEach((ax,ai) => {
-    html += `<div style="background:var(--teal-dark);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;margin:14px 0 8px;">${ax.title}</div>`;
-    ax.questions.forEach((q,qi) => {
-      const key=`${ai}_${qi}`;
-      const val=r.answers[key];
+  document.getElementById('modal-title').textContent=`تقييم – ${id}`;
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:13px;">
+    <div><strong>الاسم:</strong> ${r.name||'—'}</div><div><strong>الجهة:</strong> ${r.dept||'—'}</div>
+    <div><strong>المتوسط:</strong> <span style="color:var(--teal-dark);font-weight:700;">${Number(r.avgScore).toFixed(2)} / 5</span></div>
+    <div><strong>التاريخ:</strong> ${r.submittedAt||'—'}</div></div>`;
+  config.axes.forEach((ax,ai)=>{
+    html+=`<div style="background:var(--teal-dark);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;margin:14px 0 8px;">${ax.title}</div>`;
+    ax.questions.forEach((q,qi)=>{
+      const val=r.answers[`${ai}_${qi}`];
       const colors=['','#dc3545','#fd7e14','#e6ac00','#309C99','#02807A'];
       html+=`<div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;align-items:center;">
-        <div>${q}</div>
-        <div style="font-weight:700;color:${val?colors[val]:'#ccc'};min-width:30px;text-align:center;">${val||'—'}</div>
-      </div>`;
+        <div>${q}</div><div style="font-weight:700;color:${val?colors[val]:'#ccc'};min-width:30px;text-align:center;">${val||'—'}</div></div>`;
     });
   });
-  if(r.openAnswers?.some(a=>a.answer)) {
+  if(r.openAnswers?.some(a=>a.answer)){
     html+=`<div style="background:var(--teal-dark);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;margin:14px 0 8px;">الأسئلة المفتوحة</div>`;
     r.openAnswers.forEach(oa=>{if(oa.answer)html+=`<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;"><div style="font-weight:600;color:var(--text-secondary);margin-bottom:4px;">${oa.question}</div><div>${oa.answer}</div></div>`;});
   }
-  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-content').innerHTML=html;
   document.getElementById('detail-modal').classList.add('open');
 }
 function closeModal(){document.getElementById('detail-modal').classList.remove('open');}
 
 // ===== ANALYSIS =====
 function renderAnalysis() {
-  if(!allResponses.length) {
+  if(!allResponses.length){
     document.getElementById('chart-per-question').parentElement.innerHTML='<div class="alert alert-warning">لا توجد بيانات كافية.</div>';
     return;
   }
-  const allQ = getAllQuestions();
-  const qAvgs = allQ.map(q=>{
+  const allQ=getAllQuestions();
+  const qAvgs=allQ.map(q=>{
     const vals=allResponses.map(r=>r.answers[q.key]).filter(Boolean);
     return {text:q.text.substring(0,35)+'…',avg:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
   });
   destroyChart('chart-per-question');
-  charts['chart-per-question'] = new Chart(document.getElementById('chart-per-question').getContext('2d'),{
+  charts['chart-per-question']=new Chart(document.getElementById('chart-per-question').getContext('2d'),{
     type:'bar',
     data:{labels:qAvgs.map((_,i)=>`س${i+1}`),datasets:[{label:'المتوسط',data:qAvgs.map(q=>q.avg.toFixed(2)),backgroundColor:qAvgs.map(q=>q.avg>=4?'#02807A':q.avg>=3?'#309C99':'#fd7e14'),borderRadius:3}]},
     options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:5}}}
   });
-
   const open0=[],open1=[],open2=[];
   allResponses.forEach(r=>{
     if(r.openAnswers?.[0]?.answer) open0.push(r.openAnswers[0].answer);
     if(r.openAnswers?.[1]?.answer) open1.push(r.openAnswers[1].answer);
     if(r.openAnswers?.[2]?.answer) open2.push(r.openAnswers[2].answer);
   });
-  const renderComments=(el,arr)=>{ document.getElementById(el).innerHTML=arr.length?arr.map(a=>`<div class="comment-item">${a}</div>`).join(''):'<p style="color:var(--text-secondary);font-size:13px;">لا توجد ردود</p>'; };
-  renderComments('open-positive',open0);
-  renderComments('open-improve',open1);
-  renderComments('open-other',open2);
+  const rc=(el,arr)=>{document.getElementById(el).innerHTML=arr.length?arr.map(a=>`<div class="comment-item">${a}</div>`).join(''):'<p style="color:var(--text-secondary);font-size:13px;">لا توجد ردود</p>';};
+  rc('open-positive',open0); rc('open-improve',open1); rc('open-other',open2);
 }
 
 // ===== MANAGE QUESTIONS =====
 function renderManageQuestions() {
-  document.getElementById('ws-title-input').value = config.workshopTitle;
-  document.getElementById('ws-desc-input').value = config.workshopDesc;
-
-  let html = '';
-  config.axes.forEach((ax, ai) => {
-    html += `<div class="axis-manage-card">
+  document.getElementById('ws-title-input').value=config.workshopTitle;
+  document.getElementById('ws-desc-input').value=config.workshopDesc;
+  let html='';
+  config.axes.forEach((ax,ai)=>{
+    html+=`<div class="axis-manage-card">
       <div class="axis-manage-header">
         <input type="text" value="${ax.title}" id="ax-title-${ai}" placeholder="اسم المحور">
-        <input type="text" value="${ax.desc||''}" id="ax-desc-${ai}" placeholder="وصف المحور (اختياري)" style="font-weight:400;font-size:13px;color:var(--text-secondary);">
-        <button class="btn btn-danger btn-sm" onclick="removeAxis(${ai})">🗑️ حذف المحور</button>
+        <input type="text" value="${ax.desc||''}" id="ax-desc-${ai}" placeholder="وصف المحور" style="font-weight:400;font-size:13px;">
+        <button class="btn btn-danger btn-sm" onclick="removeAxis(${ai})">🗑️ حذف</button>
       </div>
-      <div class="axis-manage-body">
-        <div id="qs-${ai}">`;
-    ax.questions.forEach((q, qi) => {
-      html += `<div class="q-manage-row" id="qrow-manage-${ai}-${qi}">
-        <span style="color:var(--text-secondary);font-size:12px;min-width:20px;">${qi+1}</span>
+      <div class="axis-manage-body"><div id="qs-${ai}">`;
+    ax.questions.forEach((q,qi)=>{
+      html+=`<div class="q-manage-row"><span style="color:var(--text-secondary);font-size:12px;min-width:20px;">${qi+1}</span>
         <input type="text" value="${q}" id="q-${ai}-${qi}" placeholder="نص السؤال">
-        <button class="btn-icon btn-icon-danger" onclick="removeQuestion(${ai},${qi})">✕</button>
-      </div>`;
+        <button class="btn-icon btn-icon-danger" onclick="removeQuestion(${ai},${qi})">✕</button></div>`;
     });
-    html += `</div>
-        <button class="btn btn-outline btn-sm" onclick="addQuestion(${ai})" style="margin-top:8px;">+ إضافة سؤال</button>
-      </div>
-    </div>`;
+    html+=`</div><button class="btn btn-outline btn-sm" onclick="addQuestion(${ai})" style="margin-top:8px;">+ إضافة سؤال</button></div></div>`;
   });
-  document.getElementById('axes-manage-container').innerHTML = html;
-
-  let openHtml = '';
-  config.openQuestions.forEach((q,i) => {
-    openHtml += `<div class="q-manage-row">
-      <span style="color:var(--text-secondary);font-size:12px;min-width:20px;">${i+1}</span>
+  document.getElementById('axes-manage-container').innerHTML=html;
+  let openHtml='';
+  config.openQuestions.forEach((q,i)=>{
+    openHtml+=`<div class="q-manage-row"><span style="color:var(--text-secondary);font-size:12px;min-width:20px;">${i+1}</span>
       <input type="text" value="${q}" id="openq-${i}" placeholder="السؤال المفتوح">
-      <button class="btn-icon btn-icon-danger" onclick="removeOpenQuestion(${i})">✕</button>
-    </div>`;
+      <button class="btn-icon btn-icon-danger" onclick="removeOpenQuestion(${i})">✕</button></div>`;
   });
-  document.getElementById('open-q-manage').innerHTML = openHtml;
+  document.getElementById('open-q-manage').innerHTML=openHtml;
 }
 
-function addAxis() {
-  config.axes.push({id:'axis_'+Date.now(),title:'محور جديد',desc:'',questions:['سؤال جديد']});
-  renderManageQuestions();
+function addAxis(){config.axes.push({id:'axis_'+Date.now(),title:'محور جديد',desc:'',questions:['سؤال جديد']});renderManageQuestions();}
+function removeAxis(ai){if(!confirm('حذف هذا المحور؟'))return;config.axes.splice(ai,1);renderManageQuestions();}
+function addQuestion(ai){config.axes[ai].questions.push('سؤال جديد');renderManageQuestions();}
+function removeQuestion(ai,qi){if(config.axes[ai].questions.length<=1){alert('يجب أن يحتوي المحور على سؤال واحد على الأقل.');return;}config.axes[ai].questions.splice(qi,1);renderManageQuestions();}
+function addOpenQuestion(){config.openQuestions.push('سؤال مفتوح جديد');renderManageQuestions();}
+function removeOpenQuestion(i){config.openQuestions.splice(i,1);renderManageQuestions();}
+
+function saveWorkshopInfo(){
+  config.workshopTitle=document.getElementById('ws-title-input').value||config.workshopTitle;
+  config.workshopDesc=document.getElementById('ws-desc-input').value||config.workshopDesc;
+  updateWelcomePage(); saveConfig();
+  showToast('تم حفظ معلومات الورشة','success');
 }
 
-function removeAxis(ai) {
-  if(!confirm('هل تريد حذف هذا المحور وجميع أسئلته؟')) return;
-  config.axes.splice(ai,1);
-  renderManageQuestions();
-}
-
-function addQuestion(ai) {
-  config.axes[ai].questions.push('سؤال جديد');
-  renderManageQuestions();
-}
-
-function removeQuestion(ai,qi) {
-  if(config.axes[ai].questions.length<=1){alert('يجب أن يحتوي المحور على سؤال واحد على الأقل.');return;}
-  config.axes[ai].questions.splice(qi,1);
-  renderManageQuestions();
-}
-
-function addOpenQuestion() {
-  config.openQuestions.push('سؤال مفتوح جديد');
-  renderManageQuestions();
-}
-
-function removeOpenQuestion(i) {
-  config.openQuestions.splice(i,1);
-  renderManageQuestions();
-}
-
-function saveWorkshopInfo() {
-  config.workshopTitle = document.getElementById('ws-title-input').value || config.workshopTitle;
-  config.workshopDesc = document.getElementById('ws-desc-input').value || config.workshopDesc;
-  updateWelcomePage();
-  saveToStorage();
-  alert('✅ تم حفظ معلومات الورشة.');
-}
-
-function saveAllQuestions() {
-  // حفظ المحاور
-  config.axes.forEach((ax,ai) => {
-    ax.title = document.getElementById(`ax-title-${ai}`)?.value || ax.title;
-    ax.desc  = document.getElementById(`ax-desc-${ai}`)?.value || '';
-    ax.questions = ax.questions.map((_,qi) => document.getElementById(`q-${ai}-${qi}`)?.value || _);
+function saveAllQuestions(){
+  config.axes.forEach((ax,ai)=>{
+    ax.title=document.getElementById(`ax-title-${ai}`)?.value||ax.title;
+    ax.desc=document.getElementById(`ax-desc-${ai}`)?.value||'';
+    ax.questions=ax.questions.map((_,qi)=>document.getElementById(`q-${ai}-${qi}`)?.value||_);
   });
-  // حفظ الأسئلة المفتوحة
-  config.openQuestions = config.openQuestions.map((_,i) => document.getElementById(`openq-${i}`)?.value || _);
-  saveToStorage();
-  updateWelcomePage();
-  alert('✅ تم حفظ جميع التغييرات.');
+  config.openQuestions=config.openQuestions.map((_,i)=>document.getElementById(`openq-${i}`)?.value||_);
+  saveConfig(); updateWelcomePage();
+  showToast('تم حفظ جميع التغييرات','success');
 }
 
-function resetToDefaults() {
-  if(!confirm('هل تريد استعادة الأسئلة الافتراضية؟ سيتم فقد أي تعديلات غير محفوظة.')) return;
-  config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-  saveToStorage();
-  renderManageQuestions();
-  updateWelcomePage();
-  alert('✅ تم استعادة الأسئلة الافتراضية.');
+function resetToDefaults(){
+  if(!confirm('استعادة الأسئلة الافتراضية؟'))return;
+  config=JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  saveConfig(); renderManageQuestions(); updateWelcomePage();
+  showToast('تم استعادة الافتراضي','success');
 }
 
-function updateWelcomePage() {
-  const totalQ = config.axes.reduce((s,ax)=>s+ax.questions.length,0);
-  document.getElementById('q-count-display').textContent = totalQ;
-  document.getElementById('axes-count-display').textContent = config.axes.length;
-  document.getElementById('ws-title-display').textContent = config.workshopTitle;
-  document.getElementById('ws-desc-display').textContent = config.workshopDesc;
+function updateWelcomePage(){
+  const totalQ=config.axes.reduce((s,ax)=>s+ax.questions.length,0);
+  document.getElementById('q-count-display').textContent=totalQ;
+  document.getElementById('axes-count-display').textContent=config.axes.length;
+  document.getElementById('ws-title-display').textContent=config.workshopTitle;
+  document.getElementById('ws-desc-display').textContent=config.workshopDesc;
 }
 
 // ===== SETTINGS =====
-
-
-function toggleSurvey() {
-  surveyActive = document.getElementById('survey-active').checked;
-  document.getElementById('survey-status-text').textContent = surveyActive ? 'التقييم مفعل' : 'التقييم متوقف';
-  saveToStorage();
-}
-
-function changePassword() {
-  const np = document.getElementById('new-pass').value;
-  const cp = document.getElementById('confirm-pass').value;
+function toggleSurvey(){surveyActive=document.getElementById('survey-active').checked;document.getElementById('survey-status-text').textContent=surveyActive?'التقييم مفعّل':'التقييم متوقف';saveConfig();}
+function changePassword(){
+  const np=document.getElementById('new-pass').value;
+  const cp=document.getElementById('confirm-pass').value;
   if(!np){alert('أدخلي كلمة المرور الجديدة.');return;}
   if(np!==cp){alert('كلمتا المرور غير متطابقتين.');return;}
-  adminPassword = np;
-  saveToStorage();
+  adminPassword=np; saveConfig();
   document.getElementById('new-pass').value='';
   document.getElementById('confirm-pass').value='';
-  alert('✅ تم تغيير كلمة المرور.');
+  showToast('تم تغيير كلمة المرور','success');
+}
+
+async function refreshData(){
+  await loadResponsesFromSheets();
+  if(document.getElementById('admin-tab-overview').style.display!=='none') renderOverview();
+  if(document.getElementById('admin-tab-responses').style.display!=='none') renderResponses();
+  showToast('تم تحديث البيانات','success');
 }
 
 // ===== EXPORT =====
-function exportExcel() {
+function exportExcel(){
   if(!allResponses.length){alert('لا توجد بيانات.');return;}
-  const wb = XLSX.utils.book_new();
-  const allQ = getAllQuestions();
-  const data = allResponses.map(r => {
-    const row = {'الرقم المرجعي':r.id,'الاسم':r.name,'الجهة':r.dept,'المتوسط':r.avgScore,'التاريخ':new Date(r.submittedAt).toLocaleDateString('ar-SA')};
+  const wb=XLSX.utils.book_new();
+  const allQ=getAllQuestions();
+  const data=allResponses.map(r=>{
+    const row={'الرقم المرجعي':r.id,'الاسم':r.name,'الجهة':r.dept,'المتوسط':r.avgScore,'التاريخ':r.submittedAt};
     allQ.forEach((q,i)=>{row[`س${i+1}`]=r.answers[q.key]||'';});
     r.openAnswers?.forEach((oa,i)=>{row[`مفتوح${i+1}`]=oa.answer;});
     return row;
@@ -1206,29 +1094,27 @@ function exportExcel() {
   XLSX.writeFile(wb,`workshop_eval_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-function exportCSV() {
+function exportCSV(){
   if(!allResponses.length){alert('لا توجد بيانات.');return;}
   const allQ=getAllQuestions();
   const headers=['الرقم المرجعي','الاسم','الجهة','المتوسط','التاريخ',...allQ.map((_,i)=>`س${i+1}`),...config.openQuestions.map((_,i)=>`مفتوح${i+1}`)];
-  const rows=allResponses.map(r=>[r.id,r.name,r.dept,r.avgScore,new Date(r.submittedAt).toLocaleDateString('ar-SA'),...allQ.map(q=>r.answers[q.key]||''),...(r.openAnswers||[]).map(o=>o.answer)]);
-  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const rows=allResponses.map(r=>[r.id,r.name,r.dept,r.avgScore,r.submittedAt,...allQ.map(q=>r.answers[q.key]||''),...(r.openAnswers||[]).map(o=>o.answer)]);
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(c=>('"'+String(c).replace(/"/g,'""')+'"')).join(',')).join('\r\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
   a.download=`workshop_eval_${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
-function exportPDF() {
+function exportPDF(){
   if(!allResponses.length){alert('لا توجد بيانات.');return;}
   const total=allResponses.length;
   const avg=(allResponses.reduce((s,r)=>s+r.avgScore,0)/total).toFixed(2);
   const date=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
   const win=window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-  <title>تقرير تقييم الورشة</title>
+  win.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير تقييم الورشة</title>
   <style>body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;padding:40px;direction:rtl;}
   .header{background:#02807A;color:white;padding:24px;border-radius:8px;margin-bottom:28px;}
-  .header h1{font-size:20px;margin-bottom:6px;}.header p{font-size:12px;opacity:0.8;}
   .kpi-row{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;}
   .kpi{background:#f0f9f8;border:1px solid #309C99;border-radius:8px;padding:14px;flex:1;text-align:center;min-width:100px;}
   .kpi .val{font-size:24px;font-weight:700;color:#02807A;}.kpi .lbl{font-size:11px;color:#555;}
@@ -1236,32 +1122,37 @@ function exportPDF() {
   th{background:#02807A;color:white;padding:10px;text-align:right;}
   td{padding:9px 10px;border-bottom:0.5px solid #eee;}
   tr:nth-child(even){background:#fafafa;}
-  h2{color:#02807A;border-bottom:2px solid #ECE6DE;padding-bottom:8px;margin:20px 0 12px;}
-  .footer{text-align:center;color:#999;font-size:11px;margin-top:28px;}
-  </style></head><body>
-  <div class="header"><h1>تقرير تقييم الورشة – ${config.workshopTitle}</h1><p>${date}</p></div>
+  .footer{text-align:center;color:#999;font-size:11px;margin-top:28px;}</style></head><body>
+  <div class="header"><h1 style="margin:0 0 6px;font-size:20px;">تقرير تقييم الورشة – ${config.workshopTitle}</h1><p style="margin:0;font-size:12px;opacity:0.85;">${date}</p></div>
   <div class="kpi-row">
     <div class="kpi"><div class="val">${total}</div><div class="lbl">المشاركون</div></div>
     <div class="kpi"><div class="val">${avg}</div><div class="lbl">متوسط الرضا / 5</div></div>
     <div class="kpi"><div class="val">${Math.round(allResponses.filter(r=>r.avgScore>=4).length/total*100)}%</div><div class="lbl">نسبة الرضا المرتفع</div></div>
   </div>
-  <h2>الردود</h2>
   <table><thead><tr><th>الرقم</th><th>الاسم</th><th>الجهة</th><th>المتوسط</th><th>التاريخ</th></tr></thead>
-  <tbody>${allResponses.map(r=>`<tr><td>${r.id}</td><td>${r.name||'—'}</td><td>${r.dept||'—'}</td><td>${r.avgScore.toFixed(2)}</td><td>${new Date(r.submittedAt).toLocaleDateString('ar-SA')}</td></tr>`).join('')}</tbody></table>
-  <div class="footer">النيابة العامة – www.pp.gov.sa | وثيقة سرية للاستخدام الداخلي</div>
-  </body></html>`);
-  win.document.close();
-  setTimeout(()=>win.print(),500);
+  <tbody>${allResponses.map(r=>`<tr><td>${r.id}</td><td>${r.name||'—'}</td><td>${r.dept||'—'}</td><td>${Number(r.avgScore).toFixed(2)}</td><td>${r.submittedAt||'—'}</td></tr>`).join('')}</tbody></table>
+  <div class="footer">النيابة العامة – www.pp.gov.sa</div></body></html>`);
+  win.document.close();setTimeout(()=>win.print(),500);
 }
 
-function clearAllData() {
-  if(!confirm('هل أنت متأكد من مسح جميع بيانات التقييم؟')) return;
-  if(!confirm('تأكيد نهائي: سيتم حذف جميع الردود.')) return;
-  allResponses=[];saveToStorage();renderResponses();alert('تم مسح البيانات.');
+async function clearAllData(){
+  if(!confirm('مسح جميع البيانات؟'))return;
+  if(!confirm('تأكيد نهائي: سيتم حذف جميع الردود من Google Sheets.'))return;
+  showLoadingOverlay(true);
+  for(const r of allResponses){
+    sendToSheets({action:'delete',id:r.id});
+    await new Promise(res=>setTimeout(res,300));
+  }
+  setTimeout(async()=>{
+    await loadResponsesFromSheets();
+    renderResponses();
+    showLoadingOverlay(false);
+    showToast('تم مسح جميع البيانات','success');
+  },2000);
 }
 
 // ===== INIT =====
-loadFromStorage();
+loadConfig();
 updateWelcomePage();
 document.getElementById('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 </script>
