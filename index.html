@@ -800,9 +800,11 @@ function refreshAdmin() {
 
 function showAdminTab(t) {
   ['overview','responses','analysis','manage','settings'].forEach(tab => {
-    const btn = document.getElementById('at-'+tab);
-    if(btn) btn.className = 'btn btn-outline btn-sm';
-  });
+  document.getElementById('admin-tab-'+tab).style.display = 'none'; // ← هذا المحذوف
+  const btn = document.getElementById('at-'+tab);
+  if(btn) btn.className = 'btn btn-outline btn-sm';
+});
+
   document.getElementById('admin-tab-'+t).style.display = 'block';
   const activeBtn = document.getElementById('at-'+t);
   if(activeBtn) activeBtn.className = 'btn btn-primary btn-sm';
