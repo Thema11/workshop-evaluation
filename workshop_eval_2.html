@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقييم الورشة – النيابة العامة</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+:root {
+  --teal-dark: #02807A;
+  --teal-mid: #309C99;
+  --teal-light: #E1F5EE;
+  --gold-dark: #AA926D;
+  --gold-light: #C5B298;
+  --cream-dark: #ECE6DE;
+  --cream-light: #F6F4F0;
+  --green-accent: #9FD297;
+  --text-primary: #1a1a1a;
+  --text-secondary: #555;
+  --border: #ddd;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Tajawal','Segoe UI',sans-serif;background:var(--cream-light);color:var(--text-primary);direction:rtl;min-height:100vh;display:flex;flex-direction:column;}
+
+/* HEADER */
+.pp-header{background:var(--teal-dark);color:white;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.pp-header-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 28px;max-width:1400px;margin:0 auto;gap:16px;}
+.pp-logo-area{display:flex;align-items:center;justify-content:center;}
+.pp-emblem{height:80px;width:auto;display:flex;align-items:center;justify-content:center;}
+.pp-emblem img{height:80px;width:auto;object-fit:contain;}
+.pp-gold-bar{height:4px;background:var(--gold-dark);}
+.nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.1);border-radius:6px;padding:4px;direction:rtl;}
+.nav-tab{padding:7px 16px;border-radius:4px;border:none;background:transparent;color:rgba(255,255,255,0.8);cursor:pointer;font-family:inherit;font-size:13px;transition:all 0.2s;}
+.nav-tab.active{background:white;color:var(--teal-dark);font-weight:600;}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,0.15);color:white;}
+.workshop-title-header{text-align:center;}
+.workshop-title-header .wt-label{font-size:11px;color:rgba(255,255,255,0.7);}
+.workshop-title-header .wt-name{font-size:15px;font-weight:700;color:white;}
+
+/* PAGES */
+.page{display:none;max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+.page.active{display:block;}
+.page-wide{max-width:1200px;}
+
+/* WELCOME */
+.welcome-hero{background:var(--teal-dark);border-radius:12px;padding:48px 40px;color:white;text-align:center;position:relative;overflow:hidden;margin-bottom:28px;}
+.welcome-hero::before{content:'';position:absolute;top:-30px;left:-30px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%;}
+.welcome-hero h1{font-size:26px;font-weight:700;margin-bottom:12px;line-height:1.4;}
+.welcome-hero p{font-size:15px;color:rgba(255,255,255,0.85);margin-bottom:8px;line-height:1.7;}
+.welcome-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:6px 16px;font-size:13px;margin-top:12px;}
+.welcome-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;}
+.meta-card{background:white;border:0.5px solid var(--border);border-radius:10px;padding:18px;text-align:center;}
+.meta-card .icon{font-size:28px;margin-bottom:8px;}
+.meta-card .label{font-size:12px;color:var(--text-secondary);margin-bottom:4px;}
+.meta-card .value{font-size:18px;font-weight:600;color:var(--teal-dark);}
+
+/* FORM */
+.section-header{background:var(--teal-dark);color:white;padding:14px 20px;border-radius:10px 10px 0 0;font-size:15px;font-weight:600;display:flex;align-items:flex-start;gap:10px;margin-top:24px;}
+.section-header .sh-content{flex:1;}
+.section-header .sh-title{font-size:15px;font-weight:700;}
+.section-header .sh-desc{font-size:12px;color:rgba(255,255,255,0.8);margin-top:4px;}
+.section-badge{background:rgba(255,255,255,0.2);border-radius:12px;padding:3px 10px;font-size:12px;white-space:nowrap;}
+.section-body{background:white;border:0.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;}
+
+/* LIKERT HEADER */
+.likert-header{display:grid;grid-template-columns:1fr repeat(5,80px);gap:0;padding:10px 20px;background:var(--cream-dark);border-bottom:1.5px solid var(--teal-mid);position:sticky;top:118px;z-index:10;}
+.likert-header .lh-empty{}
+.likert-header .lh-label{text-align:center;font-size:9px;font-weight:600;color:var(--teal-dark);line-height:1.3;padding:2px;}
+.likert-header .lh-label span{display:block;width:24px;height:24px;border-radius:50%;margin:0 auto 4px;line-height:24px;font-size:12px;font-weight:700;color:white;}
+.lh-label:nth-child(2) span{background:#dc3545;}
+.lh-label:nth-child(3) span{background:#fd7e14;}
+.lh-label:nth-child(4) span{background:#e6ac00;}
+.lh-label:nth-child(5) span{background:var(--teal-mid);}
+.lh-label:nth-child(6) span{background:var(--teal-dark);}
+
+/* QUESTION ROW */
+.question-row{display:grid;grid-template-columns:1fr repeat(5,80px);align-items:center;gap:0;border-bottom:0.5px solid #f0f0f0;transition:background 0.15s;}
+.question-row:last-child{border-bottom:none;}
+.question-row:hover{background:#fafafa;}
+.question-row.answered{background:rgba(2,128,122,0.03);}
+.q-text{font-size:14px;line-height:1.6;color:var(--text-primary);padding:14px 20px;border-left:0.5px solid #f0f0f0;}
+.q-num{display:inline-block;background:var(--teal-light);color:var(--teal-dark);border-radius:50%;width:24px;height:24px;text-align:center;line-height:24px;font-size:12px;font-weight:600;margin-left:8px;flex-shrink:0;}
+.likert-cell{display:flex;align-items:center;justify-content:center;height:100%;min-height:52px;border-left:0.5px solid #f0f0f0;cursor:pointer;transition:background 0.15s;}
+.likert-cell:hover{background:rgba(48,156,153,0.06);}
+.likert-radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:white;cursor:pointer;transition:all 0.18s;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+.likert-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:white;opacity:0;transition:opacity 0.15s;}
+.question-row.sel-1 .likert-cell:nth-child(2){background:rgba(220,53,69,0.08);}
+.question-row.sel-2 .likert-cell:nth-child(3){background:rgba(253,126,20,0.08);}
+.question-row.sel-3 .likert-cell:nth-child(4){background:rgba(255,193,7,0.08);}
+.question-row.sel-4 .likert-cell:nth-child(5){background:rgba(48,156,153,0.08);}
+.question-row.sel-5 .likert-cell:nth-child(6){background:rgba(2,128,122,0.1);}
+.question-row.sel-1 .likert-cell:nth-child(2) .likert-radio{border-color:#dc3545;background:#dc3545;}
+.question-row.sel-2 .likert-cell:nth-child(3) .likert-radio{border-color:#fd7e14;background:#fd7e14;}
+.question-row.sel-3 .likert-cell:nth-child(4) .likert-radio{border-color:#e6ac00;background:#e6ac00;}
+.question-row.sel-4 .likert-cell:nth-child(5) .likert-radio{border-color:var(--teal-mid);background:var(--teal-mid);}
+.question-row.sel-5 .likert-cell:nth-child(6) .likert-radio{border-color:var(--teal-dark);background:var(--teal-dark);}
+.question-row[class*="sel-"] .likert-radio::after{opacity:1;}
+
+/* GENERAL INFO */
+.general-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px;}
+.form-group label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:6px;}
+.form-group input,.form-group select{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:9px 12px;font-family:inherit;font-size:14px;direction:rtl;background:white;transition:border-color 0.2s;}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--teal-mid);}
+
+/* OPEN QUESTIONS */
+.open-question{padding:16px 20px;border-bottom:0.5px solid #f0f0f0;}
+.open-question:last-child{border-bottom:none;}
+.open-q-label{font-size:14px;margin-bottom:8px;line-height:1.6;}
+textarea.open-input{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-family:inherit;font-size:14px;resize:vertical;min-height:70px;direction:rtl;transition:border-color 0.2s;}
+textarea.open-input:focus{outline:none;border-color:var(--teal-mid);}
+
+/* PROGRESS */
+.progress-bar-wrap{background:white;border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+.progress-bar-track{flex:1;background:var(--cream-dark);border-radius:10px;height:8px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:linear-gradient(to left,var(--teal-mid),var(--teal-dark));border-radius:10px;transition:width 0.4s;}
+.progress-text{font-size:13px;color:var(--text-secondary);white-space:nowrap;}
+.progress-pct{font-size:16px;font-weight:700;color:var(--teal-dark);min-width:42px;text-align:center;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;transition:all 0.2s;text-decoration:none;}
+.btn-primary{background:var(--teal-dark);color:white;}
+.btn-primary:hover{background:#026860;}
+.btn-gold{background:var(--gold-dark);color:white;}
+.btn-gold:hover{background:#9a8060;}
+.btn-outline{background:white;color:var(--teal-dark);border:1.5px solid var(--teal-dark);}
+.btn-outline:hover{background:var(--teal-light);}
+.btn-danger{background:#dc3545;color:white;}
+.btn-danger:hover{background:#c82333;}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn-lg{padding:14px 32px;font-size:16px;}
+.form-actions{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding:20px;background:white;border:0.5px solid var(--border);border-radius:10px;}
+
+/* SUCCESS */
+.success-box{background:white;border-radius:12px;padding:60px 40px;text-align:center;border:0.5px solid var(--border);}
+.success-icon{font-size:64px;margin-bottom:20px;}
+.success-box h2{font-size:24px;color:var(--teal-dark);margin-bottom:12px;}
+.success-box p{font-size:15px;color:var(--text-secondary);line-height:1.7;margin-bottom:6px;}
+.ref-badge{display:inline-block;background:var(--teal-light);color:var(--teal-dark);border:1px solid var(--teal-mid);border-radius:20px;padding:8px 20px;font-weight:700;font-size:16px;margin:16px 0;direction:ltr;}
+
+/* LOGIN */
+.login-wrap{min-height:60vh;display:flex;align-items:center;justify-content:center;}
+.login-card{background:white;border-radius:12px;padding:40px;width:100%;max-width:400px;border:0.5px solid var(--border);text-align:center;}
+.login-card h2{font-size:20px;color:var(--teal-dark);margin-bottom:6px;}
+.login-card p{font-size:13px;color:var(--text-secondary);margin-bottom:24px;}
+.login-field{margin-bottom:14px;text-align:right;}
+.login-field label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:6px;}
+.login-field input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;}
+.login-field input:focus{outline:none;border-color:var(--teal-mid);}
+.login-err{color:#dc3545;font-size:12px;margin-top:8px;display:none;}
+
+/* DASHBOARD */
+.admin-section-title{font-size:20px;font-weight:700;color:var(--teal-dark);margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid var(--teal-light);display:flex;align-items:center;gap:10px;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;}
+.kpi-card{background:white;border-radius:10px;padding:20px;border:0.5px solid var(--border);text-align:center;}
+.kpi-card .kpi-icon{font-size:28px;margin-bottom:8px;}
+.kpi-card .kpi-label{font-size:12px;color:var(--text-secondary);margin-bottom:6px;}
+.kpi-card .kpi-value{font-size:28px;font-weight:700;color:var(--teal-dark);}
+.kpi-card .kpi-sub{font-size:12px;color:var(--text-secondary);margin-top:4px;}
+.chart-card{background:white;border-radius:10px;border:0.5px solid var(--border);padding:20px;margin-bottom:20px;}
+.chart-card h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--teal-dark);}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+
+/* RESPONSES TABLE */
+.table-wrap{background:white;border-radius:10px;border:0.5px solid var(--border);overflow:hidden;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--teal-dark);color:white;padding:12px 14px;text-align:right;font-weight:600;white-space:nowrap;}
+tbody tr:nth-child(even){background:#fafafa;}
+tbody tr:hover{background:var(--teal-light);}
+tbody td{padding:11px 14px;border-bottom:0.5px solid #f0f0f0;}
+tbody tr:last-child td{border-bottom:none;}
+.score-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.score-high{background:#d4edda;color:#155724;}
+.score-mid{background:#fff3cd;color:#856404;}
+.score-low{background:#f8d7da;color:#721c24;}
+.filter-bar{background:white;border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:inherit;font-size:13px;direction:rtl;flex:1;min-width:140px;background:white;}
+.export-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.pagination{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:12px;}
+.page-btn{width:34px;height:34px;border:1.5px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:var(--text-secondary);transition:all 0.2s;}
+.page-btn.active{background:var(--teal-dark);border-color:var(--teal-dark);color:white;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:white;border-radius:12px;width:90%;max-width:700px;max-height:85vh;overflow-y:auto;padding:28px;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid var(--teal-light);}
+.modal-header h3{font-size:18px;color:var(--teal-dark);}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-secondary);}
+.modal-close:hover{color:#dc3545;}
+
+/* MANAGE QUESTIONS */
+.manage-section{background:white;border-radius:10px;border:0.5px solid var(--border);padding:20px;margin-bottom:16px;}
+.manage-section h3{font-size:15px;font-weight:600;color:var(--teal-dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.axis-manage-card{border:1.5px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.axis-manage-header{background:var(--cream-dark);padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.axis-manage-header input{flex:1;border:1.5px solid var(--border);border-radius:6px;padding:6px 10px;font-family:inherit;font-size:14px;font-weight:600;}
+.axis-manage-header input:focus{outline:none;border-color:var(--teal-mid);}
+.axis-manage-body{padding:12px 14px;}
+.q-manage-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.q-manage-row input{flex:1;border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-family:inherit;font-size:13px;direction:rtl;}
+.q-manage-row input:focus{outline:none;border-color:var(--teal-mid);}
+.btn-icon{width:30px;height:30px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s;flex-shrink:0;}
+.btn-icon-danger{background:#fee2e2;color:#dc3545;}
+.btn-icon-danger:hover{background:#dc3545;color:white;}
+.btn-icon-add{background:var(--teal-light);color:var(--teal-dark);}
+.btn-icon-add:hover{background:var(--teal-dark);color:white;}
+
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:14px;}
+.alert-info{background:var(--teal-light);color:var(--teal-dark);border:1px solid var(--teal-mid);}
+.alert-warning{background:#fff3cd;color:#856404;border:1px solid #ffc107;}
+.alert-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+
+/* TOGGLE */
+.toggle-switch{position:relative;display:inline-block;width:50px;height:26px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:26px;transition:0.3s;}
+.toggle-slider:before{position:absolute;content:'';height:20px;width:20px;right:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;}
+.toggle-switch input:checked+.toggle-slider{background:var(--teal-dark);}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(-24px);}
+
+/* STRENGTHS / IMPROVEMENTS */
+.insights-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.insight-card{background:white;border-radius:10px;border:0.5px solid var(--border);padding:18px;}
+.insight-card h3{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.insight-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #f5f5f5;font-size:13px;}
+.insight-item:last-child{border-bottom:none;}
+.insight-score{font-weight:700;min-width:36px;text-align:center;padding:3px 6px;border-radius:6px;font-size:12px;}
+
+/* COMMENTS */
+.comments-box{background:white;border-radius:10px;border:0.5px solid var(--border);padding:20px;margin-bottom:20px;}
+.comment-item{padding:12px;border-radius:8px;background:#fafafa;margin-bottom:8px;font-size:13px;line-height:1.6;border-right:3px solid var(--teal-mid);}
+
+/* FOOTER */
+.pp-footer{background:var(--teal-dark);color:rgba(255,255,255,0.7);text-align:center;padding:16px;font-size:12px;margin-top:auto;}
+.pp-footer a{color:var(--gold-light);text-decoration:none;}
+
+@media(max-width:680px){
+  .pp-header-inner{padding:10px 14px;grid-template-columns:1fr auto;}
+  .nav-tabs{gap:2px;}
+  .nav-tab{padding:6px 10px;font-size:11px;}
+  .charts-row{grid-template-columns:1fr;}
+  .general-info-grid{grid-template-columns:1fr;}
+  .likert-header{display:none;}
+  .question-row{display:flex;flex-direction:column;align-items:stretch;padding:14px 16px;gap:10px;}
+  .q-text{padding:0;border-left:none;}
+  .mobile-likert-row{display:flex;justify-content:space-between;gap:4px;}
+  .likert-cell{flex-direction:column;gap:4px;font-size:10px;min-height:unset;padding:6px 2px;border-left:none;border:1.5px solid var(--border);border-radius:8px;flex:1;}
+  .insights-grid{grid-template-columns:1fr;}
+  .modal-box{width:96%;padding:18px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="pp-header">
+  <div class="pp-header-inner">
+    <div style="justify-self:start;">
+      <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="showPage('welcome')" id="tab-survey">التقييم</button>
+        <button class="nav-tab" onclick="showAdminLogin()" id="tab-admin">لوحة التحكم</button>
+      </nav>
+    </div>
+    <div class="pp-logo-area">
+      <div class="pp-emblem">
+        <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzNDEuMDggMzQxLjA4Ij4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLmNscy0xIHsKICAgICAgICBmb250LXNpemU6IDIwLjAxcHg7CiAgICAgIH0KCiAgICAgIC5jbHMtMSwgLmNscy0yIHsKICAgICAgICBmb250LWZhbWlseTogQmFoaWpUaGVTYW5zQXJhYmljLUJvbGQsICdCYWhpaiBUaGVTYW5zQXJhYmljJzsKICAgICAgICBmb250LXdlaWdodDogNzAwOwogICAgICB9CgogICAgICAuY2xzLTEsIC5jbHMtMyB7CiAgICAgICAgZmlsbDogI2I3ODUyZTsKICAgICAgfQoKICAgICAgLmNscy00LCAuY2xzLTIgewogICAgICAgIGZpbGw6ICNmZmY7CiAgICAgIH0KCiAgICAgIC5jbHMtNSB7CiAgICAgICAgZmlsbDogIzAwNmQ2NzsKICAgICAgfQoKICAgICAgLmNscy0yIHsKICAgICAgICBmb250LXNpemU6IDEwLjI2cHg7CiAgICAgIH0KICAgIDwvc3R5bGU+CiAgPC9kZWZzPgogIDxnIGlkPSJMYXllcl8xIiBkYXRhLW5hbWU9IkxheWVyIDEiPgogICAgPGc+CiAgICAgIAogICAgICA8Zz4KICAgICAgICA8Zz4KICAgICAgICAgIDxnPgogICAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik0yMjcuNzYsMTYxLjY2Yy43My0uMzQsMS4wNC0uOTIuOTQtMS42Mi0uMS0uNjYtLjYzLTEuMTItMS4zMy0xLjE1cy0xLjIzLjQtMS4zOCwxLjA5LjE0LDEuMzYuOSwxLjY1djEwLjA5Yy0uMTMuMTItLjQyLjE4LS41NS4xM3MtLjI5LS4yOC0uMjktLjQ1Yy0uMTQtMy44LTEuNC03LjM3LTMuODItMTAuMzkuODQtMy4yLDEuNDItNi4zOCwxLjg3LTkuNjgsMS4xNS04LjQ0LDEuNDctMTcuMzctLjM4LTI1LjY4LTIuMzQsMy41Mi0zLjY2LDcuNjMtNC43LDExLjcxLS45NywzLjgxLTEuNiw3LjYxLTIuMTUsMTEuNDctLjk1LTIuMTYtMS40NS00LjI0LTEuNjYtNi41LS41OC02LjQ4LjQxLTEyLjg2LDIuODMtMTguOTctMi4wNiwxLjM2LTMuODQsMi44NC01LjQ0LDQuNTktMS45MSwyLjA5LTMuNiw0LjI0LTUuMTcsNi42LTIuMjQsMy4zNy00LjA4LDYuOC01LjczLDEwLjY5LTEuMDgtNi41OSwxLjE2LTEzLDQuNjEtMTguNTQsMS45NC0zLjExLDQuMjEtNS44OCw2Ljk5LTguMzEtMS44My4zLTMuNDcuODctNS4xNCwxLjYyLTcuMzYsMy4zLTE0LjAzLDkuNDQtMTkuMzMsMTUuNjguNTUtMy4xNSwxLjc5LTUuOTMsMy4zNS04LjU2LDQuNTQtNy42MywxMi4wMS0xMy40NSwyMC40NS0xNS45My0xLjQtLjI2LTIuNjQtLjMxLTMuOTgtLjI0LTIuNTQuMTUtNC45NS41Mi03LjQzLDEuMTQtNC42MSwxLjE2LTguOTQsMi44MS0xMy4yNyw1LjAyLjgtMS4yOCwxLjc0LTIuMzEsMi44MS0zLjMxLDQuMDItMy43Nyw5LjQ1LTYuNTYsMTQuNzUtOC4xNiwzLjk3LTEuMTksNy45OS0xLjczLDEyLjEzLTEuNDYtMS4yMi0xLjQ1LTIuODItMi4yNS00LjU5LTMuMiwyLjY5LS44MSw1LjQ5LS42MSw3Ljk4Ljc4LS43OC0xLjYxLTIuMDUtMi43Ni0zLjM2LTQsMi43NC0uMDEsNS4xNCwxLjEyLDcuMjIsMi44NC4zMi0xLjcxLDEuMTMtMy4yMSwyLjQxLTQuNDcsMS4zMiwxLjE5LDIuMTEsMi43MiwyLjQ2LDQuNTEsMi4wNS0xLjc2LDQuNDktMi44OCw3LjIzLTIuODktMS4zMiwxLjIxLTIuNTQsMi4zNS0zLjM5LDQsMS4zNC0uNjIsMi42Ni0xLjE4LDQuMTgtMS4yMiwxLjMxLS4wNCwyLjU3LjA1LDMuODEuNDQtMS42My44OC0zLjQ0LDEuNzYtNC41NywzLjIxLDguODEtLjU3LDE4LjUzLDIuNzcsMjUuMzksOC4zNiwxLjYyLDEuMzIsMy4wOCwyLjc0LDQuMjIsNC41Ny00LjQ1LTIuMjgtOC45Mi0zLjk4LTEzLjY4LTUuMTItMy4zMy0uOC03LjQ2LTEuNDQtMTAuODgtLjgsOC41NSwyLjYsMTUuOTIsOC4zNCwyMC40OCwxNi4xMSwxLjU0LDIuNjEsMi42OCw1LjQsMy4yOCw4LjQ0LTQuODMtNS42OS0xMC42OS0xMS4yLTE3LjI0LTE0LjctMi4yOS0xLjIyLTQuNi0yLjE5LTcuMTktMi42NSwxLjEsMS4xLDIuMjEsMi4xLDMuMjMsMy4yOCw1LjM5LDYuMjcsOS43LDE1LjA4LDguMywyMy42Mi0yLjEtNC45OC00LjcxLTkuNjYtOC4wMi0xMy45NS0yLjMzLTMuMDItNS4wMi01LjkzLTguMzQtNy45OCwyLjMzLDUuODMsMy4zNSwxMS45NywyLjkyLDE4LjIxLS4xOCwyLjUtLjY3LDQuODktMS43Myw3LjIzLS42Mi00LjI1LTEuMy04LjIxLTIuMzYtMTIuMjMtLjk5LTMuNzQtMi4yNi03LjY0LTQuNDgtMTAuOTMtMi4xNSw5LjU3LTEuNDEsMjAuMDkuMjUsMjkuNjJsMS4yNSw1LjcyYy0yLjM3LDMuMDEtMy43NCw2LjU5LTMuODMsMTAuNDQsMCwuMjItLjI1LjQzLS40MS40NS0uMjQuMDItLjQzLS4yMi0uNDMtLjUydi05LjY5WiIvPgogICAgICAgICAgICA8cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Ik0yMzAuNDEsMTkxLjljLS4xLS43Ny4zNS0xLjQ1LDEuMDctMS42NmwxLjMyLS4zOWMuNDktLjM5LjQ4LTEuMTIuMDMtMS42bC01LjUxLTUuODgtNS42MSw2Yy0uMjQuMjUtLjI0LjgxLS4xNSwxLjA2LjMzLjg4LDIuMS4zNCwyLjYxLDEuNzMuMzEuODYtLjEzLDEuNjktLjgyLDIuMTVzLTEuNjIuMzQtMi4zMi0uMmMtLjc4LS42MS0xLjA2LTEuNTQtMS4xOC0yLjU4bC0yLjIxLDEuOTNjLTIuNzUsMi4zOS02LjQ3LDMuMjEtOS45LDEuODctLjkzLS4zNi0xLjczLTEuMDMtMi4xNi0xLjktLjc2LTEuNTQtLjI1LTMuMzksMS4zMi00LjExLDEuMTMtLjUyLDIuNDctLjE3LDMuMzQuNzMsMS41LDEuNTUsMy4yNCwxLjM3LDQuOTQuMDcsMS40MS0xLjA4LDEuNjUtMi41NS44My0yLjM2cy0xLjQ4LS4yMy0xLjgtLjk2Yy0uNDEtLjk2LS4wMi0yLjIxLDEuMDQtMi41LjczLS4yLDEuNDQuMjIsMS45Ljc3LjUyLjYxLjY4LDEuMzQuODcsMi4xOWwyLjcxLTIuODIsMy43OS00LjEyLTUuOC01LjhjLTIuNi0yLjYtNS4zOC00Ljg3LTguMjktNy4xMS00LjYzLTMuNTctOS44NC02LjQyLTE1LjYtNy40NWwtLjIyLjcsMi40Myw1LjkyLDUuNTksMTMuNDFjLjgyLjEsMS4yNy43NSwxLjA5LDEuNDItLjU3LDIuMTItMS43OCwzLjg5LTMuMzgsNS4zLTQuMjMsMy43MS0xMC4zOCwzLjgxLTE0LjcxLjIxLTEuNzUtMS40Ni0zLjEyLTMuMzUtMy42Ny01LjYtLjE5LS43Ni40NS0xLjI3LDEuMTMtMS4zM2w2LjUtMTQuNzcsMS45MS00LjQ2Yy0uMjYtLjQ2LS40LS44NC0uMzktMS40LTEuODgtLjM2LTMuNzQtLjQ1LTUuODMtLjU1LDIuOTctMS40Myw2LjIyLTEuOTEsOS41Mi0xLjYzLDcuNi42NCwxNC4xMSwzLjcxLDIwLjEyLDguMjcsMi40OSwxLjg5LDQuNzYsMy44OCw2Ljk1LDYuMDlsMi4zLDIuMzIsMy4xOCwzLjM2YzguOTQtOS43NCwxOC43Ny0xOC45MiwzMi42LTIwLjA1LDMuMjYtLjI3LDYuNDguMjEsOS40MSwxLjYxLTIuMDMuMS0zLjg1LjE3LTUuNzQuNTItLjAyLjUyLS4xMi45My0uNDIsMS4zN2wzLjc2LDguOCw0LjY0LDEwLjVjLjQuMDYuNzMuMTkuOS40LjE5LjI1LjMyLjcxLjIzLDEuMDItLjU3LDEuOTctMS42NSwzLjY3LTMuMTIsNS4wMy0zLjU0LDMuMjktOC42MSw0LjA4LTEyLjksMS44NS0yLjc4LTEuNDUtNC45LTMuODUtNS43My02Ljg5LS4yLS43Mi4zMi0xLjM3LDEuMDgtMS40bDcuOTktMTkuMTRjLjExLS4yNS0uMTEtLjczLS4yLS45LTYuMTcsMS4xNS0xMS4xOSw0LjAyLTE2LjA5LDcuODQtNC44OCwzLjgtOS4zMiw4LjAxLTEzLjU4LDEyLjUzbDIuMTMsMi4zMSw0LjM1LDQuNjNjLjI0LS44OC4zOS0xLjY2Ljk2LTIuMy40OC0uNTQsMS4yNi0uOTIsMS45Ni0uNjMsMS4xNS40OCwxLjQsMS45Ni42NiwyLjkyLS40NS41OC0xLjE0LjYyLTEuODkuNDYtLjE4LjQtLjA5Ljg3LjE2LDEuMjYsMS4yMiwxLjk1LDMuOTgsMi45MSw1LjQ4LDEuNDkuNDUtLjQyLjktLjg2LDEuNDYtMS4xMS45LS40LDEuODMtLjM4LDIuNy4xNC42Ny40MSwxLjIzLDEuMiwxLjMxLDIuMTUuMTIsMS40OS0uNjgsMi44NS0yLjEsMy41MS0zLjAyLDEuNC02LjYuOTItOS4zNS0uOThsLTMuMTctMi42N2MtLjA4LDEuMDEtLjM2LDEuOTEtMS4wNywyLjUyLS41OS41LTEuMzIuNzItMi4wNi40NC0uNi0uMjItMS4xNi0uNzYtMS4yNy0xLjU4Wk0xOTQuMDcsMTgwLjM5aDcuNTFjLS4wNC0uNDUuMDgtLjguMzctMS4xNmwtNy45NC0xOC45OWMtLjI0LjA2LS40My4xNC0uNjEuMjl2MTguNjNjLjU0LjI2LjczLjcuNjcsMS4yM1pNMjYxLjI0LDE3OS4xNHYtMTYuMjJzLjAxLTIuNDMuMDEtMi40M2wtLjU5LS4yNC03Ljk2LDE5LjA0Yy4zNi4zMS40Ni42Ny40MSwxLjFoNy40OGMtLjAxLS41Mi4xNC0uOTQuNjUtMS4yNVpNMjYyLjc1LDE4MC4zOWg3Ljg0Yy0uMDQtLjQyLjA2LS43Ny4zNS0xLjExbC04LjM0LTE5LjA1LS41OC4yNHYxOC42N2MuNTYuMjMuNzIuNy43MywxLjI1Wk0xOTEuOTUsMTgwLjM5Yy0uMDQtLjYyLjE4LS45Ny42OC0xLjIzdi0xOC42MmMtLjE4LS4xMy0uNDEtLjIxLS41OS0uMjJsLTguMzIsMTguOTZjLjMxLjM0LjQxLjYyLjM3LDEuMDloNy44N1oiLz4KICAgICAgICAgIDwvZz4KICAgICAgICAgIDxnPgogICAgICAgICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTMiIHBvaW50cz0iMTMwLjI1IDEwNi44OCAxMzAuMjUgMTE5LjY2IDE0My4wMyAxMTkuNjYgMTQzLjAzIDEzMi40NCAxNTUuODEgMTMyLjQ0IDE1NS44MSAxMDYuODggMTMwLjI1IDEwNi44OCIvPgogICAgICAgICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iMTEzLjM0IDEzMi40NCAxMTMuMzQgMTQwLjg5IDEyMS44IDE0MC44OSAxMjEuOCAxNDkuMzUgMTMwLjI1IDE0OS4zNSAxMzAuMjUgMTMyLjQ0IDExMy4zNCAxMzIuNDQiLz4KICAgICAgICAgICAgPHBvbHlnb24gY2xhc3M9ImNscy00IiBwb2ludHM9IjEzMC4yNSAxNDkuMzUgMTMwLjI1IDE1Ny44IDEzOC43MSAxNTcuOCAxMzguNzEgMTY2LjI2IDE0Ny4xNiAxNjYuMjYgMTQ3LjE2IDE0OS4zNSAxMzAuMjUgMTQ5LjM1Ii8+CiAgICAgICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSI5Ni40NCAxMTUuNTMgOTYuNDQgMTIzLjk5IDEwNC44OSAxMjMuOTkgMTA0Ljg5IDEzMi40NCAxMTMuMzQgMTMyLjQ0IDExMy4zNCAxMTUuNTMgOTYuNDQgMTE1LjUzIi8+CiAgICAgICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSI5OC4xOCAxNTEuMDkgOTguMTggMTU3LjggMTA0Ljg5IDE1Ny44IDEwNC44OSAxNjQuNTEgMTExLjYgMTY0LjUxIDExMS42IDE1MS4wOSA5OC4xOCAxNTEuMDkiLz4KICAgICAgICAgICAgPHBvbHlnb24gY2xhc3M9ImNscy00IiBwb2ludHM9IjExNS4wOSAxNjggMTE1LjA5IDE3NC43MSAxMjEuOCAxNzQuNzEgMTIxLjggMTgxLjQyIDEyOC41MSAxODEuNDIgMTI4LjUxIDE2OCAxMTUuMDkgMTY4Ii8+CiAgICAgICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSI4MS4yNyAxMzQuMTkgODEuMjcgMTQwLjg5IDg3Ljk4IDE0MC44OSA4Ny45OCAxNDcuNiA5NC42OSAxNDcuNiA5NC42OSAxMzQuMTkgODEuMjcgMTM0LjE5Ii8+CiAgICAgICAgICAgIDxnPgogICAgICAgICAgICAgIDxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSI3NC44MyAxNjEuNTYgNzQuODMgMTY2LjI2IDc5LjUzIDE2Ni4yNiA3OS41MyAxNzAuOTUgODQuMjMgMTcwLjk1IDg0LjIzIDE2MS41NiA3NC44MyAxNjEuNTYiLz4KICAgICAgICAgICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iOTEuNzQgMTc4LjQ3IDkxLjc0IDE4My4xNiA5Ni40NCAxODMuMTYgOTYuNDQgMTg3Ljg2IDEwMS4xMyAxODcuODYgMTAxLjEzIDE3OC40NyA5MS43NCAxNzguNDciLz4KICAgICAgICAgICAgPC9nPgogICAgICAgICAgICA8cG9seWdvbiBjbGFzcz0iY2xzLTQiIHBvaW50cz0iNjcuNzIgMTg4LjI2IDY3LjcyIDE5MS42MiA3MS4wNyAxOTEuNjIgNzEuMDcgMTk0Ljk3IDc0LjQzIDE5NC45NyA3NC40MyAxODguMjYgNjcuNzIgMTg4LjI2Ii8+CiAgICAgICAgICA8L2c+CiAgICAgICAgPC9nPgogICAgICAgIDx0ZXh0IGNsYXNzPSJjbHMtMSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjYuMjEgMjIwLjk4KSI+PHRzcGFuIHg9IjAiIHk9IjAiPtio2LHZhtin2YXYrCDYp9mE2KrYrdmI2YQg2KfZhNmF2KTYs9iz2Yo8L3RzcGFuPjwvdGV4dD4KICAgICAgICA8dGV4dCBjbGFzcz0iY2xzLTIiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDY4LjA5IDIzOS41KSI+PHRzcGFuIHg9IjAiIHk9IjAiPklOU1RJVFVUSU9OQUwgVFJBTlNGT1JNQVRJT04gUFJPR1JBTTwvdHNwYW4+PC90ZXh0PgogICAgICA8L2c+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4=" alt="شعار النيابة العامة">
+      </div>
+    </div>
+    <div style="justify-self:end;"></div>
+  </div>
+  <div class="pp-gold-bar"></div>
+</header>
+
+<!-- WELCOME PAGE -->
+<div class="page active" id="page-welcome">
+  <div class="welcome-hero">
+    <h1 id="ws-title-display">تقييم الورشة</h1>
+    <p id="ws-desc-display">شاركنا رأيك لمساعدتنا على تحسين جودة ورشنا المستقبلية.</p>
+    <div class="welcome-badge">⏱️ يستغرق التقييم أقل من 3 دقائق</div>
+  </div>
+  <div class="welcome-meta">
+    <div class="meta-card"><div class="icon">📋</div><div class="label">عدد الأسئلة</div><div class="value" id="q-count-display">11</div></div>
+    <div class="meta-card"><div class="icon">⏱️</div><div class="label">الوقت المقدّر</div><div class="value">3</div><div style="font-size:12px;color:var(--text-secondary);">دقائق</div></div>
+    <div class="meta-card"><div class="icon">📊</div><div class="label">المحاور</div><div class="value" id="axes-count-display">4</div></div>
+    <div class="meta-card"><div class="icon">🔒</div><div class="label">الخصوصية</div><div class="value" style="font-size:14px;">مجهول</div></div>
+  </div>
+  <div style="text-align:center;">
+    <button class="btn btn-primary btn-lg" onclick="startSurvey()">ابدأ التقييم ←</button>
+  </div>
+</div>
+
+<!-- SURVEY PAGE -->
+<div class="page" id="page-survey">
+  <div class="progress-bar-wrap">
+    <div class="progress-pct" id="prog-pct">0%</div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-text" id="prog-text">0 / 0 إجابة</div>
+  </div>
+  <div id="survey-form-container"></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="showPage('welcome')">← العودة</button>
+    <div style="font-size:13px;color:var(--text-secondary);" id="validation-msg"></div>
+    <button class="btn btn-primary btn-lg" onclick="submitSurvey()">إرسال التقييم ✓</button>
+  </div>
+</div>
+
+<!-- SUCCESS PAGE -->
+<div class="page" id="page-success">
+  <div class="success-box">
+    <div class="success-icon">✅</div>
+    <h2>شكرًا لمشاركتك!</h2>
+    <p>تم استلام تقييمك بنجاح. رأيك يساعدنا على تحسين جودة ورشنا المستقبلية.</p>
+    <div class="ref-badge" id="ref-num">WS-2026-0001</div>
+    <div style="margin-top:28px;">
+      <button class="btn btn-primary" onclick="showPage('welcome')">تقييم آخر</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="page" id="page-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div style="font-size:40px;margin-bottom:12px;">🔐</div>
+      <h2>لوحة تحكم الإدارة</h2>
+      <p>أدخل بيانات الدخول للوصول إلى لوحة التحكم</p>
+      <div class="login-field"><label>اسم المستخدم</label><input type="text" id="login-user" placeholder="اسم المستخدم"></div>
+      <div class="login-field"><label>كلمة المرور</label><input type="password" id="login-pass" placeholder="••••••••" onkeypress="if(event.key==='Enter')doLogin()"></div>
+      <div class="login-err" id="login-err">⚠️ بيانات الدخول غير صحيحة</div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="doLogin()">تسجيل الدخول</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="page page-wide" id="page-admin">
+  <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm" onclick="showAdminTab('overview')" id="at-overview">نظرة عامة</button>
+      <button class="btn btn-outline btn-sm" onclick="showAdminTab('responses')" id="at-responses">الردود</button>
+      <button class="btn btn-outline btn-sm" onclick="showAdminTab('analysis')" id="at-analysis">التحليل</button>
+      <button class="btn btn-outline btn-sm" onclick="showAdminTab('manage')" id="at-manage">إدارة الأسئلة</button>
+      <button class="btn btn-outline btn-sm" onclick="showAdminTab('settings')" id="at-settings">الإعدادات</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="adminLogout()">تسجيل الخروج</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="admin-tab-overview">
+    <div class="admin-section-title">📊 نظرة عامة</div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="charts-row">
+      <div class="chart-card"><h3>متوسط التقييم لكل محور</h3><canvas id="chart-axes" height="220"></canvas></div>
+      <div class="chart-card"><h3>توزيع التقييمات العامة</h3><canvas id="chart-dist" height="220"></canvas></div>
+    </div>
+    <div class="insights-grid">
+      <div class="insight-card">
+        <h3>💪 أعلى الأسئلة تقييمًا</h3>
+        <div id="top-strengths"></div>
+      </div>
+      <div class="insight-card">
+        <h3>🎯 فرص التحسين</h3>
+        <div id="top-improvements"></div>
+      </div>
+    </div>
+    <div class="chart-card"><h3>نسبة الرضا العام (%)</h3><canvas id="chart-satisfaction" height="100"></canvas></div>
+  </div>
+
+  <!-- RESPONSES -->
+  <div id="admin-tab-responses" style="display:none;">
+    <div class="admin-section-title">📋 الردود</div>
+    <div class="filter-bar">
+      <input type="text" id="search-input" placeholder="بحث بالرقم أو الاسم أو الجهة..." oninput="filterResponses()">
+      <select id="filter-score" onchange="filterResponses()">
+        <option value="">جميع التقييمات</option>
+        <option value="high">مرتفع (4+)</option>
+        <option value="mid">متوسط (3–4)</option>
+        <option value="low">منخفض (أقل من 3)</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="clearFilters()">مسح</button>
+    </div>
+    <div class="export-bar">
+      <button class="btn btn-gold btn-sm" onclick="exportExcel()">📥 Excel</button>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">📄 CSV</button>
+      <button class="btn btn-outline btn-sm" onclick="exportPDF()">🖨️ PDF</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()" style="margin-right:auto;">🗑️ مسح جميع البيانات</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>الرقم المرجعي</th><th>الاسم</th><th>الجهة</th>
+          <th>المتوسط</th><th>التاريخ</th><th>الإجراءات</th>
+        </tr></thead>
+        <tbody id="responses-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- ANALYSIS -->
+  <div id="admin-tab-analysis" style="display:none;">
+    <div class="admin-section-title">📈 التحليل التفصيلي</div>
+    <div class="chart-card"><h3>متوسط التقييم لكل سؤال</h3><canvas id="chart-per-question" height="300"></canvas></div>
+    <div class="insights-grid">
+      <div class="comments-box">
+        <h3 style="font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:12px;">💬 أكثر شيء أعجب المشاركين</h3>
+        <div id="open-positive"></div>
+      </div>
+      <div class="comments-box">
+        <h3 style="font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:12px;">🎯 فرص التحسين</h3>
+        <div id="open-improve"></div>
+      </div>
+    </div>
+    <div class="comments-box">
+      <h3 style="font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:12px;">📝 ملاحظات إضافية</h3>
+      <div id="open-other"></div>
+    </div>
+  </div>
+
+  <!-- MANAGE QUESTIONS -->
+  <div id="admin-tab-manage" style="display:none;">
+    <div class="admin-section-title">⚙️ إدارة الأسئلة والمحاور</div>
+    <div class="alert alert-warning">⚠️ التعديلات تنعكس على التقييمات المستقبلية فقط. البيانات المحفوظة لن تتأثر.</div>
+
+    <div class="manage-section">
+      <h3>🏷️ معلومات الورشة</h3>
+      <div class="general-info-grid" style="padding:0;">
+        <div class="form-group"><label>اسم الورشة</label><input type="text" id="ws-title-input" placeholder="اسم الورشة"></div>
+        <div class="form-group"><label>وصف مختصر</label><input type="text" id="ws-desc-input" placeholder="وصف الورشة"></div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary btn-sm" onclick="saveWorkshopInfo()">💾 حفظ المعلومات</button>
+      </div>
+    </div>
+
+    <div class="manage-section">
+      <h3>📋 المحاور والأسئلة</h3>
+      <div id="axes-manage-container"></div>
+      <button class="btn btn-outline btn-sm" onclick="addAxis()" style="margin-top:10px;">+ إضافة محور جديد</button>
+    </div>
+
+    <div class="manage-section">
+      <h3>💬 الأسئلة المفتوحة</h3>
+      <div id="open-q-manage"></div>
+      <button class="btn btn-outline btn-sm" onclick="addOpenQuestion()" style="margin-top:10px;">+ إضافة سؤال مفتوح</button>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="saveAllQuestions()">💾 حفظ جميع التغييرات</button>
+      <button class="btn btn-outline" onclick="resetToDefaults()">↺ استعادة الافتراضي</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="admin-tab-settings" style="display:none;">
+    <div class="admin-section-title">🔧 الإعدادات</div>
+    <div class="manage-section">
+      <h3>📡 ربط Google Sheets</h3>
+      <div class="form-group" style="max-width:600px;">
+        <label>رابط Google Apps Script (Web App URL)</label>
+        <input type="text" id="sheets-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveSettings()" style="margin-top:10px;">💾 حفظ</button>
+      <button class="btn btn-outline btn-sm" onclick="testConnection()" style="margin-top:10px;">🔗 اختبار الاتصال</button>
+      <div id="connection-status" style="margin-top:10px;font-size:13px;"></div>
+    </div>
+    <div class="manage-section">
+      <h3>🔐 تغيير كلمة المرور</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:500px;">
+        <div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="new-pass" placeholder="••••••••"></div>
+        <div class="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="confirm-pass" placeholder="••••••••"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="changePassword()" style="margin-top:10px;">حفظ كلمة المرور</button>
+    </div>
+    <div class="manage-section">
+      <h3>📊 حالة الاستبيان</h3>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <label class="toggle-switch"><input type="checkbox" id="survey-active" checked onchange="toggleSurvey()"><span class="toggle-slider"></span></label>
+        <div><div style="font-size:14px;font-weight:600;" id="survey-status-text">التقييم مفعّل</div>
+        <div style="font-size:12px;color:var(--text-secondary);">المشاركون يمكنهم تعبئة التقييم</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESPONSE DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">تفاصيل التقييم</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<footer class="pp-footer">
+  <div>النيابة العامة – المملكة العربية السعودية | <a href="https://www.pp.gov.sa">www.pp.gov.sa</a></div>
+  <div style="margin-top:4px;">نظام تقييم الورش © 2026</div>
+</footer>
+
+<script>
+// ===== DEFAULT CONFIG =====
+const DEFAULT_CONFIG = {
+  workshopTitle: 'تقييم الورشة',
+  workshopDesc: 'شاركنا رأيك لمساعدتنا على تحسين جودة ورشنا المستقبلية.',
+  axes: [
+    {
+      id: 'content',
+      title: 'تقييم المحتوى',
+      desc: 'يقيس هذا المحور مدى وضوح أهداف الورشة وجودة المحتوى المقدم.',
+      questions: [
+        'كانت أهداف الورشة واضحة.',
+        'المحتوى كان مفيداً ومرتبطًا بموضوع الورشة.',
+        'تم عرض المحتوى بشكل منظم.'
+      ]
+    },
+    {
+      id: 'trainer',
+      title: 'تقييم المدرب والميسِر',
+      desc: 'يقيس هذا المحور مستوى أداء المدرب في إيصال المعلومات وإدارة النقاش.',
+      questions: [
+        'تمكن المدرب من إيصال المعلومات بوضوح.',
+        'أدار النقاش بشكل فعال.',
+        'أجاب على الاستفسارات بشكل مناسب.'
+      ]
+    },
+    {
+      id: 'organization',
+      title: 'التنظيم والتجربة',
+      desc: 'يقيس هذا المحور مستوى التنظيم والبيئة والوقت المخصص.',
+      questions: [
+        'تنظيم الورشة كان جيدًا.',
+        'الوقت كان مناسبًا.',
+        'البيئة والتجهيزات كانت مناسبة.'
+      ]
+    },
+    {
+      id: 'satisfaction',
+      title: 'الرضا العام',
+      desc: 'يقيس هذا المحور مستوى الرضا العام والتوصية.',
+      questions: [
+        'أنا راض عن الورشة بشكل عام.',
+        'أوصي بحضور ورش مشابهة مستقبلًا.'
+      ]
+    }
+  ],
+  openQuestions: [
+    'أكثر شيء أعجبك في الورشة؟',
+    'ما أبرز فرصة للتحسين؟',
+    'أي ملاحظات إضافية؟'
+  ]
+};
+
+// ===== STATE =====
+let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+let answers = {};
+let allResponses = [];
+let filteredResponses = [];
+let currentPage = 1;
+const PER_PAGE = 15;
+let isLoggedIn = false;
+let surveyActive = true;
+let adminPassword = 'ITP@2025';
+let sheetsURL = '';
+let charts = {};
+
+// ===== STORAGE =====
+function saveToStorage() {
+  try {
+    localStorage.setItem('ws_responses', JSON.stringify(allResponses));
+    localStorage.setItem('ws_config', JSON.stringify(config));
+    localStorage.setItem('ws_active', JSON.stringify(surveyActive));
+    localStorage.setItem('ws_password', adminPassword);
+    localStorage.setItem('ws_sheets_url', sheetsURL);
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const r = localStorage.getItem('ws_responses');
+    if(r) allResponses = JSON.parse(r);
+    const c = localStorage.getItem('ws_config');
+    if(c) config = JSON.parse(c);
+    const a = localStorage.getItem('ws_active');
+    if(a !== null) surveyActive = JSON.parse(a);
+    const p = localStorage.getItem('ws_password');
+    if(p) adminPassword = p;
+    const s = localStorage.getItem('ws_sheets_url');
+    if(s) sheetsURL = s;
+  } catch(e) {}
+}
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if(['welcome','survey','success'].includes(id)) document.getElementById('tab-survey').classList.add('active');
+  if(id === 'admin') document.getElementById('tab-admin').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showAdminLogin() {
+  if(isLoggedIn) { showPage('admin'); refreshAdmin(); }
+  else showPage('login');
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value;
+  const p = document.getElementById('login-pass').value;
+  if(u === 'admin' && p === adminPassword) {
+    isLoggedIn = true;
+    document.getElementById('login-err').style.display = 'none';
+    showPage('admin');
+    document.getElementById('tab-admin').classList.add('active');
+    refreshAdmin();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+function adminLogout() { isLoggedIn = false; showPage('welcome'); }
+
+// ===== BUILD SURVEY =====
+function getAllQuestions() {
+  let all = [];
+  config.axes.forEach((ax, ai) => {
+    ax.questions.forEach((q, qi) => {
+      all.push({ axis: ax.title, axisId: ax.id, text: q, key: `${ai}_${qi}` });
+    });
+  });
+  return all;
+}
+
+function startSurvey() {
+  if(!surveyActive) { alert('التقييم متوقف حاليًا.'); return; }
+  answers = {};
+  buildForm();
+  showPage('survey');
+  updateProgress();
+}
+
+function buildForm() {
+  let html = '';
+
+  // General info
+  html += `<div class="section-header"><div class="sh-content"><div class="sh-title">📝 بيانات اختيارية</div></div></div>
+  <div class="section-body">
+    <div class="general-info-grid">
+      <div class="form-group"><label>الاسم (اختياري)</label><input type="text" id="gi-name" placeholder="اسمك"></div>
+      <div class="form-group"><label>الجهة / الإدارة (اختياري)</label><input type="text" id="gi-dept" placeholder="جهتك أو إدارتك"></div>
+    </div>
+  </div>`;
+
+  // Axes
+  config.axes.forEach((ax, ai) => {
+    const total = ax.questions.length;
+    html += `<div class="section-header">
+      <div class="sh-content">
+        <div class="sh-title">📌 ${ax.title}</div>
+        ${ax.desc ? `<div class="sh-desc">${ax.desc}</div>` : ''}
+      </div>
+      <span class="section-badge">${total} سؤال</span>
+    </div>`;
+
+    html += `<div class="likert-header">
+      <div class="lh-empty"></div>
+      <div class="lh-label"><span>1</span>لا أوافق بشدة</div>
+      <div class="lh-label"><span>2</span>لا أوافق</div>
+      <div class="lh-label"><span>3</span>محايد</div>
+      <div class="lh-label"><span>4</span>أوافق</div>
+      <div class="lh-label"><span>5</span>أوافق بشدة</div>
+    </div>
+    <div class="section-body">`;
+
+    ax.questions.forEach((q, qi) => {
+      const key = `${ai}_${qi}`;
+      const labels = ['لا أوافق بشدة','لا أوافق','محايد','أوافق','أوافق بشدة'];
+      const qNum = config.axes.slice(0,ai).reduce((s,a) => s+a.questions.length, 0) + qi + 1;
+      html += `<div class="question-row" id="qrow-${key}">
+        <div class="q-text"><span class="q-num">${qNum}</span>${q}</div>
+        ${[1,2,3,4,5].map(v => `
+        <div class="likert-cell" onclick="setAnswer('${key}',${v})" title="${labels[v-1]}">
+          <div class="likert-radio"></div>
+          <span class="mobile-label">${labels[v-1]}</span>
+        </div>`).join('')}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  // Open questions
+  html += `<div class="section-header"><div class="sh-content"><div class="sh-title">💬 أسئلة مفتوحة (اختيارية)</div></div></div>
+  <div class="section-body">`;
+  config.openQuestions.forEach((q, i) => {
+    html += `<div class="open-question">
+      <div class="open-q-label"><span class="q-num">${i+1}</span>${q}</div>
+      <textarea class="open-input" id="open-${i}" placeholder="أجب هنا..." rows="2"></textarea>
+    </div>`;
+  });
+  html += `</div>`;
+
+  document.getElementById('survey-form-container').innerHTML = html;
+}
+
+function setAnswer(key, val) {
+  answers[key] = val;
+  const row = document.getElementById('qrow-' + key);
+  if(row) {
+    row.className = row.className.replace(/sel-[0-9]/g,'').trim();
+    row.classList.add('answered','sel-' + val);
+  }
+  updateProgress();
+}
+
+function getTotalQ() {
+  return config.axes.reduce((s,ax) => s + ax.questions.length, 0);
+}
+
+function updateProgress() {
+  const total = getTotalQ();
+  const answered = Object.keys(answers).length;
+  const pct = total > 0 ? Math.round(answered/total*100) : 0;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = `${answered} / ${total} إجابة`;
+}
+
+// ===== SUBMIT =====
+function submitSurvey() {
+  const total = getTotalQ();
+  const answered = Object.keys(answers).length;
+  if(answered < total) {
+    if(!confirm(`لم تُجب على ${total - answered} سؤالًا. هل تريد الإرسال الآن؟`)) return;
+  }
+
+  const allQ = getAllQuestions();
+  const scores = allQ.map(q => answers[q.key] || null);
+  const validScores = scores.filter(s => s !== null);
+  const avg = validScores.length ? validScores.reduce((a,b)=>a+b,0)/validScores.length : 0;
+
+  // متوسط كل محور
+  const axesScores = {};
+  config.axes.forEach((ax, ai) => {
+    const axScores = ax.questions.map((_,qi) => answers[`${ai}_${qi}`]).filter(Boolean);
+    axesScores[ax.id] = axScores.length ? axScores.reduce((a,b)=>a+b,0)/axScores.length : 0;
+  });
+
+  const openAnswers = config.openQuestions.map((q,i) => ({
+    question: q,
+    answer: document.getElementById('open-'+i)?.value || ''
+  }));
+
+  const now = new Date();
+  const refNum = `WS-${now.getFullYear()}-${String(allResponses.length+1).padStart(4,'0')}`;
+
+  const response = {
+    id: refNum,
+    name: document.getElementById('gi-name')?.value || '',
+    dept: document.getElementById('gi-dept')?.value || '',
+    answers,
+    openAnswers,
+    avgScore: Math.round(avg*100)/100,
+    axesScores,
+    questions: allQ,
+    workshopTitle: config.workshopTitle,
+    submittedAt: now.toISOString()
+  };
+
+  allResponses.push(response);
+  saveToStorage();
+
+  // إرسال لـ Google Sheets
+  if(sheetsURL) {
+    const sheetsData = {
+      id: refNum,
+      name: response.name,
+      dept: response.dept,
+      avgScore: response.avgScore,
+      submittedAt: now.toLocaleString('ar-SA'),
+      scores: allQ.map(q => response.answers[q.key] || ''),
+      openAnswers: openAnswers.map(o => o.answer),
+      axesScores
+    };
+    const params = new URLSearchParams({ data: JSON.stringify(sheetsData) });
+    const img = new Image();
+    img.src = sheetsURL + '?' + params.toString();
+  }
+
+  document.getElementById('ref-num').textContent = refNum;
+  showPage('success');
+}
+
+// ===== ADMIN =====
+function refreshAdmin() {
+  document.getElementById('survey-active').checked = surveyActive;
+  document.getElementById('survey-status-text').textContent = surveyActive ? 'التقييم مفعل' : 'التقييم متوقف';
+  document.getElementById('sheets-url-input').value = sheetsURL;
+  document.getElementById('ws-title-input').value = config.workshopTitle;
+  document.getElementById('ws-desc-input').value = config.workshopDesc;
+  showAdminTab('overview');
+}
+
+function showAdminTab(t) {
+  ['overview','responses','analysis','manage','settings'].forEach(tab => {
+    document.getElementById('admin-tab-'+tab).style.display = 'none';
+    const btn = document.getElementById('at-'+tab);
+    if(btn) btn.className = 'btn btn-outline btn-sm';
+  });
+  document.getElementById('admin-tab-'+t).style.display = 'block';
+  const activeBtn = document.getElementById('at-'+t);
+  if(activeBtn) activeBtn.className = 'btn btn-primary btn-sm';
+
+  if(t==='overview') renderOverview();
+  if(t==='responses') renderResponses();
+  if(t==='analysis') renderAnalysis();
+  if(t==='manage') renderManageQuestions();
+  if(t==='settings') {}
+}
+
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+// ===== OVERVIEW =====
+function renderOverview() {
+  const total = allResponses.length;
+  const avg = total ? (allResponses.reduce((s,r)=>s+r.avgScore,0)/total).toFixed(2) : '—';
+  const highCount = allResponses.filter(r=>r.avgScore>=4).length;
+  const recPct = total ? Math.round(highCount/total*100) : 0;
+  const today = allResponses.filter(r=>new Date(r.submittedAt).toDateString()===new Date().toDateString()).length;
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-label">إجمالي المشاركين</div><div class="kpi-value">${total}</div></div>
+    <div class="kpi-card"><div class="kpi-icon">⭐</div><div class="kpi-label">متوسط الرضا العام</div><div class="kpi-value">${avg}</div><div class="kpi-sub">من 5</div></div>
+    <div class="kpi-card"><div class="kpi-icon">👍</div><div class="kpi-label">نسبة الرضا المرتفع</div><div class="kpi-value">${recPct}%</div></div>
+    <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">ردود اليوم</div><div class="kpi-value">${today}</div></div>
+  `;
+
+  // Axes bar chart
+  destroyChart('chart-axes');
+  const axLabels = config.axes.map(ax => ax.title);
+  const axAvgs = config.axes.map((ax, ai) => {
+    if(!total) return 0;
+    let scores = [];
+    allResponses.forEach(r => {
+      ax.questions.forEach((_,qi) => { if(r.answers[`${ai}_${qi}`]) scores.push(r.answers[`${ai}_${qi}`]); });
+    });
+    return scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2) : 0;
+  });
+  charts['chart-axes'] = new Chart(document.getElementById('chart-axes').getContext('2d'), {
+    type:'bar',
+    data:{labels:axLabels,datasets:[{label:'المتوسط',data:axAvgs,backgroundColor:['#02807A','#309C99','#AA926D','#9FD297'],borderRadius:4}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:5}}}
+  });
+
+  // Distribution doughnut
+  destroyChart('chart-dist');
+  const dist = [0,0,0,0,0];
+  allResponses.forEach(r => Object.values(r.answers).forEach(v=>{if(v>=1&&v<=5)dist[v-1]++;}));
+  charts['chart-dist'] = new Chart(document.getElementById('chart-dist').getContext('2d'), {
+    type:'doughnut',
+    data:{labels:['1','2','3','4','5'],datasets:[{data:dist,backgroundColor:['#dc3545','#fd7e14','#e6ac00','#309C99','#02807A'],borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom'}},cutout:'55%'}
+  });
+
+  // Satisfaction horizontal bar
+  destroyChart('chart-satisfaction');
+  const satLabels = ['مرتفع جداً (5)','مرتفع (4)','محايد (3)','منخفض (2)','منخفض جداً (1)'];
+  const satData = [dist[4],dist[3],dist[2],dist[1],dist[0]];
+  charts['chart-satisfaction'] = new Chart(document.getElementById('chart-satisfaction').getContext('2d'), {
+    type:'bar',
+    data:{labels:satLabels,datasets:[{data:satData,backgroundColor:['#02807A','#309C99','#e6ac00','#fd7e14','#dc3545'],borderRadius:4}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}}
+  });
+
+  // Strengths & improvements
+  const allQ = getAllQuestions();
+  const qAvgs = allQ.map(q => {
+    const vals = allResponses.map(r=>r.answers[q.key]).filter(Boolean);
+    return { text: q.text, avg: vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0 };
+  }).filter(q=>q.avg>0).sort((a,b)=>b.avg-a.avg);
+
+  const top3 = qAvgs.slice(0,3);
+  const bot3 = [...qAvgs].sort((a,b)=>a.avg-b.avg).slice(0,3);
+
+  document.getElementById('top-strengths').innerHTML = top3.map(q=>`
+    <div class="insight-item">
+      <span class="insight-score score-high">${q.avg.toFixed(1)}</span>
+      <span style="font-size:13px;">${q.text}</span>
+    </div>`).join('') || '<p style="color:var(--text-secondary);font-size:13px;">لا توجد بيانات</p>';
+
+  document.getElementById('top-improvements').innerHTML = bot3.map(q=>`
+    <div class="insight-item">
+      <span class="insight-score score-low">${q.avg.toFixed(1)}</span>
+      <span style="font-size:13px;">${q.text}</span>
+    </div>`).join('') || '<p style="color:var(--text-secondary);font-size:13px;">لا توجد بيانات</p>';
+}
+
+// ===== RESPONSES =====
+function renderResponses() {
+  filteredResponses = [...allResponses];
+  filterResponses();
+}
+
+function filterResponses() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const fScore = document.getElementById('filter-score').value;
+  filteredResponses = allResponses.filter(r => {
+    if(search && !r.id.toLowerCase().includes(search) && !(r.name||'').toLowerCase().includes(search) && !(r.dept||'').toLowerCase().includes(search)) return false;
+    if(fScore==='high'&&r.avgScore<4) return false;
+    if(fScore==='mid'&&(r.avgScore<3||r.avgScore>=4)) return false;
+    if(fScore==='low'&&r.avgScore>=3) return false;
+    return true;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value='';
+  document.getElementById('filter-score').value='';
+  filterResponses();
+}
+
+function renderTable() {
+  const start = (currentPage-1)*PER_PAGE;
+  const page = filteredResponses.slice(start, start+PER_PAGE);
+  const tbody = document.getElementById('responses-tbody');
+  if(!filteredResponses.length) {
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:32px;">لا توجد ردود</td></tr>`;
+    document.getElementById('pagination').innerHTML='';
+    return;
+  }
+  tbody.innerHTML = page.map(r => {
+    const sc = r.avgScore;
+    const cls = sc>=4?'score-high':sc>=3?'score-mid':'score-low';
+    const date = new Date(r.submittedAt).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});
+    return `<tr>
+      <td style="font-weight:600;direction:ltr;">${r.id}</td>
+      <td>${r.name||'—'}</td>
+      <td>${r.dept||'—'}</td>
+      <td><span class="score-pill ${cls}">${sc.toFixed(2)} / 5</span></td>
+      <td>${date}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="showDetail('${r.id}')">عرض</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteResponse('${r.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const totalPages = Math.ceil(filteredResponses.length/PER_PAGE);
+  document.getElementById('pagination').innerHTML = totalPages>1
+    ? Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===currentPage?'active':''}" onclick="goPage(${i+1})">${i+1}</button>`).join('')
+    : '';
+}
+
+function goPage(p){currentPage=p;renderTable();}
+
+function deleteResponse(id) {
+  if(!confirm(`هل أنت متأكد من حذف التقييم ${id}؟`)) return;
+  allResponses = allResponses.filter(r=>r.id!==id);
+  saveToStorage();
+  filterResponses();
+  // حذف من Sheets
+  if(sheetsURL) { const img=new Image(); img.src=sheetsURL+'?action=delete&id='+encodeURIComponent(id); }
+}
+
+function showDetail(id) {
+  const r = allResponses.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('modal-title').textContent = `تقييم – ${id}`;
+  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;font-size:13px;">
+    <div><strong>الاسم:</strong> ${r.name||'—'}</div>
+    <div><strong>الجهة:</strong> ${r.dept||'—'}</div>
+    <div><strong>المتوسط:</strong> <span style="color:var(--teal-dark);font-weight:700;">${r.avgScore.toFixed(2)} / 5</span></div>
+    <div><strong>التاريخ:</strong> ${new Date(r.submittedAt).toLocaleString('ar-SA')}</div>
+  </div>`;
+  config.axes.forEach((ax,ai) => {
+    html += `<div style="background:var(--teal-dark);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;margin:14px 0 8px;">${ax.title}</div>`;
+    ax.questions.forEach((q,qi) => {
+      const key=`${ai}_${qi}`;
+      const val=r.answers[key];
+      const colors=['','#dc3545','#fd7e14','#e6ac00','#309C99','#02807A'];
+      html+=`<div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:9px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;align-items:center;">
+        <div>${q}</div>
+        <div style="font-weight:700;color:${val?colors[val]:'#ccc'};min-width:30px;text-align:center;">${val||'—'}</div>
+      </div>`;
+    });
+  });
+  if(r.openAnswers?.some(a=>a.answer)) {
+    html+=`<div style="background:var(--teal-dark);color:white;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;margin:14px 0 8px;">الأسئلة المفتوحة</div>`;
+    r.openAnswers.forEach(oa=>{if(oa.answer)html+=`<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;"><div style="font-weight:600;color:var(--text-secondary);margin-bottom:4px;">${oa.question}</div><div>${oa.answer}</div></div>`;});
+  }
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('detail-modal').classList.add('open');
+}
+function closeModal(){document.getElementById('detail-modal').classList.remove('open');}
+
+// ===== ANALYSIS =====
+function renderAnalysis() {
+  if(!allResponses.length) {
+    document.getElementById('chart-per-question').parentElement.innerHTML='<div class="alert alert-warning">لا توجد بيانات كافية.</div>';
+    return;
+  }
+  const allQ = getAllQuestions();
+  const qAvgs = allQ.map(q=>{
+    const vals=allResponses.map(r=>r.answers[q.key]).filter(Boolean);
+    return {text:q.text.substring(0,35)+'…',avg:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
+  });
+  destroyChart('chart-per-question');
+  charts['chart-per-question'] = new Chart(document.getElementById('chart-per-question').getContext('2d'),{
+    type:'bar',
+    data:{labels:qAvgs.map((_,i)=>`س${i+1}`),datasets:[{label:'المتوسط',data:qAvgs.map(q=>q.avg.toFixed(2)),backgroundColor:qAvgs.map(q=>q.avg>=4?'#02807A':q.avg>=3?'#309C99':'#fd7e14'),borderRadius:3}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:5}}}
+  });
+
+  const open0=[],open1=[],open2=[];
+  allResponses.forEach(r=>{
+    if(r.openAnswers?.[0]?.answer) open0.push(r.openAnswers[0].answer);
+    if(r.openAnswers?.[1]?.answer) open1.push(r.openAnswers[1].answer);
+    if(r.openAnswers?.[2]?.answer) open2.push(r.openAnswers[2].answer);
+  });
+  const renderComments=(el,arr)=>{ document.getElementById(el).innerHTML=arr.length?arr.map(a=>`<div class="comment-item">${a}</div>`).join(''):'<p style="color:var(--text-secondary);font-size:13px;">لا توجد ردود</p>'; };
+  renderComments('open-positive',open0);
+  renderComments('open-improve',open1);
+  renderComments('open-other',open2);
+}
+
+// ===== MANAGE QUESTIONS =====
+function renderManageQuestions() {
+  document.getElementById('ws-title-input').value = config.workshopTitle;
+  document.getElementById('ws-desc-input').value = config.workshopDesc;
+
+  let html = '';
+  config.axes.forEach((ax, ai) => {
+    html += `<div class="axis-manage-card">
+      <div class="axis-manage-header">
+        <input type="text" value="${ax.title}" id="ax-title-${ai}" placeholder="اسم المحور">
+        <input type="text" value="${ax.desc||''}" id="ax-desc-${ai}" placeholder="وصف المحور (اختياري)" style="font-weight:400;font-size:13px;color:var(--text-secondary);">
+        <button class="btn btn-danger btn-sm" onclick="removeAxis(${ai})">🗑️ حذف المحور</button>
+      </div>
+      <div class="axis-manage-body">
+        <div id="qs-${ai}">`;
+    ax.questions.forEach((q, qi) => {
+      html += `<div class="q-manage-row" id="qrow-manage-${ai}-${qi}">
+        <span style="color:var(--text-secondary);font-size:12px;min-width:20px;">${qi+1}</span>
+        <input type="text" value="${q}" id="q-${ai}-${qi}" placeholder="نص السؤال">
+        <button class="btn-icon btn-icon-danger" onclick="removeQuestion(${ai},${qi})">✕</button>
+      </div>`;
+    });
+    html += `</div>
+        <button class="btn btn-outline btn-sm" onclick="addQuestion(${ai})" style="margin-top:8px;">+ إضافة سؤال</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('axes-manage-container').innerHTML = html;
+
+  let openHtml = '';
+  config.openQuestions.forEach((q,i) => {
+    openHtml += `<div class="q-manage-row">
+      <span style="color:var(--text-secondary);font-size:12px;min-width:20px;">${i+1}</span>
+      <input type="text" value="${q}" id="openq-${i}" placeholder="السؤال المفتوح">
+      <button class="btn-icon btn-icon-danger" onclick="removeOpenQuestion(${i})">✕</button>
+    </div>`;
+  });
+  document.getElementById('open-q-manage').innerHTML = openHtml;
+}
+
+function addAxis() {
+  config.axes.push({id:'axis_'+Date.now(),title:'محور جديد',desc:'',questions:['سؤال جديد']});
+  renderManageQuestions();
+}
+
+function removeAxis(ai) {
+  if(!confirm('هل تريد حذف هذا المحور وجميع أسئلته؟')) return;
+  config.axes.splice(ai,1);
+  renderManageQuestions();
+}
+
+function addQuestion(ai) {
+  config.axes[ai].questions.push('سؤال جديد');
+  renderManageQuestions();
+}
+
+function removeQuestion(ai,qi) {
+  if(config.axes[ai].questions.length<=1){alert('يجب أن يحتوي المحور على سؤال واحد على الأقل.');return;}
+  config.axes[ai].questions.splice(qi,1);
+  renderManageQuestions();
+}
+
+function addOpenQuestion() {
+  config.openQuestions.push('سؤال مفتوح جديد');
+  renderManageQuestions();
+}
+
+function removeOpenQuestion(i) {
+  config.openQuestions.splice(i,1);
+  renderManageQuestions();
+}
+
+function saveWorkshopInfo() {
+  config.workshopTitle = document.getElementById('ws-title-input').value || config.workshopTitle;
+  config.workshopDesc = document.getElementById('ws-desc-input').value || config.workshopDesc;
+  updateWelcomePage();
+  saveToStorage();
+  alert('✅ تم حفظ معلومات الورشة.');
+}
+
+function saveAllQuestions() {
+  // حفظ المحاور
+  config.axes.forEach((ax,ai) => {
+    ax.title = document.getElementById(`ax-title-${ai}`)?.value || ax.title;
+    ax.desc  = document.getElementById(`ax-desc-${ai}`)?.value || '';
+    ax.questions = ax.questions.map((_,qi) => document.getElementById(`q-${ai}-${qi}`)?.value || _);
+  });
+  // حفظ الأسئلة المفتوحة
+  config.openQuestions = config.openQuestions.map((_,i) => document.getElementById(`openq-${i}`)?.value || _);
+  saveToStorage();
+  updateWelcomePage();
+  alert('✅ تم حفظ جميع التغييرات.');
+}
+
+function resetToDefaults() {
+  if(!confirm('هل تريد استعادة الأسئلة الافتراضية؟ سيتم فقد أي تعديلات غير محفوظة.')) return;
+  config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  saveToStorage();
+  renderManageQuestions();
+  updateWelcomePage();
+  alert('✅ تم استعادة الأسئلة الافتراضية.');
+}
+
+function updateWelcomePage() {
+  const totalQ = config.axes.reduce((s,ax)=>s+ax.questions.length,0);
+  document.getElementById('q-count-display').textContent = totalQ;
+  document.getElementById('axes-count-display').textContent = config.axes.length;
+  document.getElementById('ws-title-display').textContent = config.workshopTitle;
+  document.getElementById('ws-desc-display').textContent = config.workshopDesc;
+}
+
+// ===== SETTINGS =====
+function saveSettings() {
+  sheetsURL = document.getElementById('sheets-url-input').value.trim();
+  saveToStorage();
+  document.getElementById('connection-status').innerHTML = '<span style="color:var(--teal-dark);">✅ تم حفظ الإعدادات.</span>';
+}
+
+function testConnection() {
+  const url = document.getElementById('sheets-url-input').value.trim();
+  if(!url){alert('أدخلي الرابط أولاً.');return;}
+  document.getElementById('connection-status').innerHTML = '⏳ جاري الاختبار...';
+  const img = new Image();
+  img.onload = img.onerror = () => {
+    document.getElementById('connection-status').innerHTML = '<span style="color:var(--teal-dark);">✅ الرابط يعمل بشكل صحيح.</span>';
+  };
+  img.src = url + '?test=1&t=' + Date.now();
+}
+
+function toggleSurvey() {
+  surveyActive = document.getElementById('survey-active').checked;
+  document.getElementById('survey-status-text').textContent = surveyActive ? 'التقييم مفعل' : 'التقييم متوقف';
+  saveToStorage();
+}
+
+function changePassword() {
+  const np = document.getElementById('new-pass').value;
+  const cp = document.getElementById('confirm-pass').value;
+  if(!np){alert('أدخلي كلمة المرور الجديدة.');return;}
+  if(np!==cp){alert('كلمتا المرور غير متطابقتين.');return;}
+  adminPassword = np;
+  saveToStorage();
+  document.getElementById('new-pass').value='';
+  document.getElementById('confirm-pass').value='';
+  alert('✅ تم تغيير كلمة المرور.');
+}
+
+// ===== EXPORT =====
+function exportExcel() {
+  if(!allResponses.length){alert('لا توجد بيانات.');return;}
+  const wb = XLSX.utils.book_new();
+  const allQ = getAllQuestions();
+  const data = allResponses.map(r => {
+    const row = {'الرقم المرجعي':r.id,'الاسم':r.name,'الجهة':r.dept,'المتوسط':r.avgScore,'التاريخ':new Date(r.submittedAt).toLocaleDateString('ar-SA')};
+    allQ.forEach((q,i)=>{row[`س${i+1}`]=r.answers[q.key]||'';});
+    r.openAnswers?.forEach((oa,i)=>{row[`مفتوح${i+1}`]=oa.answer;});
+    return row;
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),'الردود');
+  XLSX.writeFile(wb,`workshop_eval_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function exportCSV() {
+  if(!allResponses.length){alert('لا توجد بيانات.');return;}
+  const allQ=getAllQuestions();
+  const headers=['الرقم المرجعي','الاسم','الجهة','المتوسط','التاريخ',...allQ.map((_,i)=>`س${i+1}`),...config.openQuestions.map((_,i)=>`مفتوح${i+1}`)];
+  const rows=allResponses.map(r=>[r.id,r.name,r.dept,r.avgScore,new Date(r.submittedAt).toLocaleDateString('ar-SA'),...allQ.map(q=>r.answers[q.key]||''),...(r.openAnswers||[]).map(o=>o.answer)]);
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`workshop_eval_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function exportPDF() {
+  if(!allResponses.length){alert('لا توجد بيانات.');return;}
+  const total=allResponses.length;
+  const avg=(allResponses.reduce((s,r)=>s+r.avgScore,0)/total).toFixed(2);
+  const date=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+  <title>تقرير تقييم الورشة</title>
+  <style>body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;padding:40px;direction:rtl;}
+  .header{background:#02807A;color:white;padding:24px;border-radius:8px;margin-bottom:28px;}
+  .header h1{font-size:20px;margin-bottom:6px;}.header p{font-size:12px;opacity:0.8;}
+  .kpi-row{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;}
+  .kpi{background:#f0f9f8;border:1px solid #309C99;border-radius:8px;padding:14px;flex:1;text-align:center;min-width:100px;}
+  .kpi .val{font-size:24px;font-weight:700;color:#02807A;}.kpi .lbl{font-size:11px;color:#555;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{background:#02807A;color:white;padding:10px;text-align:right;}
+  td{padding:9px 10px;border-bottom:0.5px solid #eee;}
+  tr:nth-child(even){background:#fafafa;}
+  h2{color:#02807A;border-bottom:2px solid #ECE6DE;padding-bottom:8px;margin:20px 0 12px;}
+  .footer{text-align:center;color:#999;font-size:11px;margin-top:28px;}
+  </style></head><body>
+  <div class="header"><h1>تقرير تقييم الورشة – ${config.workshopTitle}</h1><p>${date}</p></div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="val">${total}</div><div class="lbl">المشاركون</div></div>
+    <div class="kpi"><div class="val">${avg}</div><div class="lbl">متوسط الرضا / 5</div></div>
+    <div class="kpi"><div class="val">${Math.round(allResponses.filter(r=>r.avgScore>=4).length/total*100)}%</div><div class="lbl">نسبة الرضا المرتفع</div></div>
+  </div>
+  <h2>الردود</h2>
+  <table><thead><tr><th>الرقم</th><th>الاسم</th><th>الجهة</th><th>المتوسط</th><th>التاريخ</th></tr></thead>
+  <tbody>${allResponses.map(r=>`<tr><td>${r.id}</td><td>${r.name||'—'}</td><td>${r.dept||'—'}</td><td>${r.avgScore.toFixed(2)}</td><td>${new Date(r.submittedAt).toLocaleDateString('ar-SA')}</td></tr>`).join('')}</tbody></table>
+  <div class="footer">النيابة العامة – www.pp.gov.sa | وثيقة سرية للاستخدام الداخلي</div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),500);
+}
+
+function clearAllData() {
+  if(!confirm('هل أنت متأكد من مسح جميع بيانات التقييم؟')) return;
+  if(!confirm('تأكيد نهائي: سيتم حذف جميع الردود.')) return;
+  allResponses=[];saveToStorage();renderResponses();alert('تم مسح البيانات.');
+}
+
+// ===== INIT =====
+loadFromStorage();
+updateWelcomePage();
+document.getElementById('detail-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+</script>
+</body>
+</html>
